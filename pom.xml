@@ -1,0 +1,222 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.fraser.joe.poc.microservices.springboot</groupId>
+  <artifactId>TmobileAssessment</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  
+ 	<properties>
+    	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    	<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    	<java.version>21</java.version>
+	</properties>
+	
+ 	<parent>
+    	<groupId>org.springframework.boot</groupId>
+    	<artifactId>spring-boot-starter-parent</artifactId>
+    	<version>3.5.3</version>
+    	<relativePath /> <!-- lookup parent from repository -->
+	</parent>
+
+ 	<dependencies>
+
+<!-- Starter webflux uses netty not tomcat and is used for developing Spring Boot Reactive Web Applications or RESTful Services. --> 	  
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
+
+<!-- aides the developer. Whenever files change in the classpath, applications using spring-boot-devtools will cause the application to restart.  -->
+		<dependency>
+    		<groupId>org.springframework.boot</groupId>
+    		<artifactId>spring-boot-devtools</artifactId>
+    		<scope>runtime</scope>
+		</dependency>
+		
+<!-- aides the logging -->	
+		<dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-logging</artifactId>
+        </dependency>
+				
+		<!--   	2.0.17 latest, managed version is 2.0.17  -->
+		<dependency>
+		    <groupId>org.slf4j</groupId>
+		    <artifactId>slf4j-api</artifactId>
+		</dependency>
+
+		<!--   	1.5.18 is latest, managed version is 1.5.18  -->
+		<dependency>
+		    <groupId>ch.qos.logback</groupId>
+		    <artifactId>logback-core</artifactId>
+		</dependency>
+
+<!-- add several production grade services to your application with little effort on your part. --> 
+		<dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+<!-- Starter Test provides unit testing and integration test capablities with Spring Test, Mockito and JUnit. --> 	  
+		<dependency>
+    		<groupId>org.springframework.boot</groupId>
+    		<artifactId>spring-boot-starter-test</artifactId>
+    		<scope>test</scope>
+		</dependency>
+    <!-- test dependencies-->
+    
+<!--   	5.13.1 is latest, managed version is 5.12.2  -->
+    	<dependency>
+      		<groupId>org.junit.jupiter</groupId>
+      		<artifactId>junit-jupiter-engine</artifactId>
+      		<scope>test</scope>
+    	</dependency>
+		
+		
+<!-- json to java conversion -->
+<!--   	2.19.1 is latest, managed version is 2.19.1  -->
+		<dependency>
+    		<groupId>com.fasterxml.jackson.core</groupId>
+    		<artifactId>jackson-databind</artifactId>
+    	</dependency>
+    	
+<!-- java to json conversion --> 
+<!--   	2.13.1 is latest, managed version is 2.13.1  -->
+ 
+		<dependency>
+    		<groupId>com.google.code.gson</groupId>
+    		<artifactId>gson</artifactId>
+		</dependency>  	
+    	
+<!-- For handling Request Validation Errors -->		
+<!--   	2.19.1 is latest, managed version is 2.19.1  -->
+		<dependency>
+		   <groupId>com.fasterxml.jackson.datatype</groupId>
+		   <artifactId>jackson-datatype-jsr310</artifactId>
+		</dependency>
+		
+<!-- Api Documentation(Swagger Testing) -->	
+<!--
+		<dependency>
+ 			<groupId>io.springfox</groupId>
+ 			<artifactId>springfox-boot-starter</artifactId>
+			<version>3.0.0</version>
+		</dependency>
+-->		
+ 
+ <!--   
+		<dependency>
+    			<groupId>org.springdoc</groupId>
+        		<artifactId>springdoc-openapi-ui</artifactId>
+        		<version>1.8.0</version>
+        	</dependency>
+-->        	
+		<dependency>
+    			<groupId>org.springdoc</groupId>
+    			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    			<version>2.8.9</version>
+		</dependency>
+		
+<!-- Begin Database Dependencies -->
+<!--   	3.2.0 is latest, managed version is 3.5.3, so the connection pool is enabled by default  -->
+		<dependency>
+		    <groupId>org.springframework.boot</groupId>
+		    <artifactId>spring-boot-starter-data-r2dbc</artifactId>
+		</dependency>
+  		
+<!--   	3.2.0 is latest, managed version is 3.1.0  -->
+		<dependency>
+    		<groupId>jakarta.persistence</groupId>
+    		<artifactId>jakarta.persistence-api</artifactId>
+ 		</dependency>
+		<dependency>
+		    <groupId>org.hibernate.reactive</groupId>
+		    <artifactId>hibernate-reactive-core</artifactId>
+		    <version>4.2.1.Final</version>
+		</dependency> 		
+ 			
+<!-- Reactive Connection Pool -->
+
+<!--   11.0.8 is latest, managed version is 1.0.2.RELEASE -->
+		<dependency>
+		    <groupId>io.r2dbc</groupId>
+		    <artifactId>r2dbc-pool</artifactId>
+		</dependency>
+				
+<!-- Reactive H2 in memory database, managed version is 1.0.0.RELEASE -->
+		<dependency>
+		    <groupId>io.r2dbc</groupId>
+		    <artifactId>r2dbc-h2</artifactId>
+			<scope>runtime</scope>		    
+		</dependency>
+				
+<!-- jakarta.validation -->
+    	<dependency>
+        	<groupId>org.springframework.boot</groupId>
+        	<artifactId>spring-boot-starter-validation</artifactId>
+    	</dependency>		
+    	
+<!-- Needed for the Docker Plugin -->
+<!-- https://mvnrepository.com/artifact/com.spotify/docker-maven-plugin (plexus) -->
+<!-- Don't think this will work on windows -->
+<!-- 
+		<dependency>
+    		<groupId>com.spotify</groupId>
+    		<artifactId>dockerfile-maven-plugin</artifactId>
+    		<version>1.4.10</version>
+		</dependency>
+-->		
+		
+	</dependencies>
+	
+<!-- make the jar in eclipse 	right click Project, Run As: Maven Build -->
+<!-- goal needs to be set as clean package -->
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+    		</plugin>
+			
+<!-- goal needs to be set as docker:build -->
+<!-- output directory is: ${project.build.directory}/docker -->	
+<!-- Don't think this will work on windows -->
+<!-- Not used
+			<plugin>
+  				<groupId>com.spotify</groupId>
+  				<artifactId>dockerfile-maven-plugin</artifactId>
+  				<version>1.4.10</version>
+  				<executions>
+    				<execution>
+      					<id>default</id>
+     					<phase>deploy</phase>
+          				<goals>
+        					<goal>build</goal>
+      					</goals>
+    				</execution>
+  				</executions>
+  				<configuration>
+					<contextDirectory>docker</contextDirectory>
+					<dockerfile>Dockerfile</dockerfile>
+  docker.containers/group-name/image-name 					  				
+    				<repository>docker.containers/joe-fraser-va-poc-service:1</repository>
+    				<tag>${project.version}</tag>
+    				<buildArgs>
+      					<JAR_FILE>${project.build.finalName}.jar</JAR_FILE>
+    				</buildArgs>
+  				</configuration>
+			</plugin>	
+-->    			
+		</plugins>
+		
+	</build>
+		
+	<profiles>
+  		<profile>
+    		<id>dev</id>
+    		<activation>
+      			<activeByDefault>true</activeByDefault>
+    		</activation>
+		</profile>
+	</profiles>	
+  
+</project>
