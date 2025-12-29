@@ -132,7 +132,7 @@
 		    <groupId>org.hibernate.reactive</groupId>
 		    <artifactId>hibernate-reactive-core</artifactId>
 		    <version>4.2.1.Final</version>
-		</dependency> 		
+		</dependency> 	
  			
 <!-- Reactive Connection Pool -->
 
@@ -149,12 +149,11 @@
 			<scope>runtime</scope>		    
 		</dependency>
 		
+<!--   11.0.8 is latest, managed version is 1.0.0.RELEASE -->
 		<dependency>
-        	<groupId>com.h2database</groupId>
-        	<artifactId>h2</artifactId>
-        <!-- Scope can be set to 'runtime' if only used in an embedded fashion -->
-			<scope>runtime</scope>
-    	</dependency>		
+		    <groupId>io.r2dbc</groupId>
+		    <artifactId>r2dbc-spi</artifactId>
+		</dependency>
 				
 <!-- jakarta.validation -->
     	<dependency>
