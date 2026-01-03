@@ -36,7 +36,6 @@ import springboot.services.validation.request.RequestValidationService;
 @RestController
 @RequestMapping(path="/rest/api")
 public class TaskController
-	extends ControllerBase
 {
 	@Autowired
 	private Task taskService;
@@ -49,6 +48,7 @@ public class TaskController
 	@Qualifier("requestStringBuilderContainer")
 	private StringBuilderContainer requestStringBuilderContainer;
 	
+	// Mono controller method will automatically subscribe()
 	@RequestMapping(method = {RequestMethod.POST},
 			path = "/v1/createTask",
 			consumes = MediaType.APPLICATION_JSON_VALUE,
@@ -83,6 +83,7 @@ public class TaskController
 		return new ResponseEntity<>(jsonString, aResponseHeader, HttpStatus.CREATED);
 	}
 	
+	// Mono controller method will automatically subscribe()
 	@RequestMapping(method = {RequestMethod.GET},
 			path = "/v1/all/tasks",
 			produces = MediaType.APPLICATION_JSON_VALUE
@@ -110,6 +111,7 @@ public class TaskController
 		return new ResponseEntity<>(jsonString, aResponseHeader, HttpStatus.OK);
 	}
 	
+	// Mono controller method will automatically subscribe()
 	@RequestMapping(method = {RequestMethod.GET},
 			path = "/v1/findByTaskStatus/{taskStatus}",
 			produces = MediaType.APPLICATION_JSON_VALUE
@@ -129,6 +131,7 @@ public class TaskController
 			throw new RequestValidationException(errorList);
 		}
 		
+/*		
 		List<TaskEntity> statusList = taskService.findByTaskStatus(taskStatus);
 		boolean isEmpty = true;
 		if(null != statusList && statusList.size() > 0) {
@@ -144,8 +147,9 @@ public class TaskController
 		
 		// support CORS
 		HttpHeaders aResponseHeader = createResponseHeader(request);
+*/		
 		
-		return new ResponseEntity<>(jsonString, aResponseHeader, HttpStatus.OK);
+		return taskService.findByTaskStatus(taskStatus);
 	}
 	
 }

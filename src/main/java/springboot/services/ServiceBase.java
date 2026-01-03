@@ -1,4 +1,4 @@
-package springboot.controllers.rest;
+package springboot.services;
 
 import java.lang.reflect.Method;
 import java.time.ZonedDateTime;
@@ -21,8 +21,8 @@ import springboot.dto.response.ResultStatus;
 import springboot.enums.MapperEnum;
 import springboot.errorHandling.helpers.ZonedDateTimeAdapter;
 
-public abstract class ControllerBase
-{
+public abstract class ServiceBase {
+
 	protected static final String EOL = System.getProperty("line.separator");
 	protected static final String INDENT = "  ";
 
