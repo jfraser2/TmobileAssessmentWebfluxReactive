@@ -1,5 +1,7 @@
 package springboot.controllers.rest;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
 import java.util.List;
 
@@ -67,7 +69,7 @@ public class TaskController
 		
 		if (errorList.size() > 0)
 		{
-//			System.out.println("Right before the throw");
+//			System.out.println("createTask - Right before the throw");
 			throw new RequestValidationException(errorList);
 		}
 		
@@ -105,18 +107,18 @@ public class TaskController
 		ValidationErrorContainer requestValidationErrorsContainer = 
 				(ValidationErrorContainer) this.applicationContext.getBean("requestValidationErrorsContainer");		
 		
-		GetByStatus data = new GetByStatus(taskStatus);
+		GetByStatus data = new GetByStatus(URLDecoder.decode(taskStatus, StandardCharsets.UTF_8));
 		getByTaskStatusValidation.validateRequest(data, requestValidationErrorsContainer, null);
 		List<ApiValidationError> errorList = requestValidationErrorsContainer.getValidationErrorList();
 		
 		if (errorList.size() > 0)
 		{
-//			System.out.println("Right before the throw");
+			System.out.println("findByStatus - Right before the throw passed");
 			throw new RequestValidationException(errorList);			
 		}
 		
 		
-		return taskService.findByTaskStatus(taskStatus, request, requestStringBuilderContainer);
+		return taskService.findByTaskStatus(data.getTaskStatus(), request, requestStringBuilderContainer);
 	}
 	
 }

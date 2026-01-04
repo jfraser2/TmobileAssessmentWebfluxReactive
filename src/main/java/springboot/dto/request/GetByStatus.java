@@ -9,8 +9,12 @@ public class GetByStatus {
 	private String taskStatus;
 
 	public GetByStatus(String taskStatus) {
-		super();
-		this.taskStatus = taskStatus;
+		
+		if ("\"\"".equalsIgnoreCase(taskStatus)) {
+			this.taskStatus = null;
+		} else {
+			this.taskStatus = taskStatus;
+		}	
 	}
 
 	public String getTaskStatus() {

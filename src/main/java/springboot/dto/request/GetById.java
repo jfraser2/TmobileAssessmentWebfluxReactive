@@ -10,7 +10,6 @@ public class GetById {
 	private String id;
 
 	public GetById(String id) {
-		super();
 		this.id = id;
 	}
 
