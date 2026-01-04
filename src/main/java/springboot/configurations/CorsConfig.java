@@ -3,6 +3,7 @@ package springboot.configurations;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.config.CorsRegistry;
 import org.springframework.web.reactive.config.EnableWebFlux;
+import org.springframework.web.reactive.config.ResourceHandlerRegistry;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 
 /**
@@ -54,6 +55,22 @@ public class CorsConfig implements WebFluxConfigurer
 	    
 	    // Add more mappings...
                 
-    }		
+    }
+    
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // Customize the resource handler for Swagger UI assets
+        registry.addResourceHandler("/documentation/webjars/**") // Custom URL path pattern
+                .addResourceLocations("classpath:/META-INF/resources/webjars/") // Default location inside the JAR
+                .resourceChain(false); // Disable resource chaining (optional, often recommended for WebJars)
+
+        // You might also need to map the main swagger-ui.html or index.html if using older/specific setups
+        registry.addResourceHandler("/documentation/swagger-ui.html")
+                .addResourceLocations("classpath:/META-INF/resources/swagger-ui.html");
+                
+        // For general static resources, you can add more handlers:
+        // registry.addResourceHandler("/static/**")
+        //         .addResourceLocations("classpath:/static/");
+    }    
     
 }
