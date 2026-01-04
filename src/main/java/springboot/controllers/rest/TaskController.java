@@ -68,7 +68,7 @@ public class TaskController
 		if (errorList.size() > 0)
 		{
 //			System.out.println("Right before the throw");
-			Mono.error(new RequestValidationException(errorList));
+			throw new RequestValidationException(errorList);
 		}
 		
 		// 201 response
@@ -112,7 +112,7 @@ public class TaskController
 		if (errorList.size() > 0)
 		{
 //			System.out.println("Right before the throw");
-			Mono.error(new RequestValidationException(errorList));			
+			throw new RequestValidationException(errorList);			
 		}
 		
 		
