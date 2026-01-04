@@ -39,11 +39,14 @@ public class TaskImpl
 		
 		return taskRepository.findByTaskStatus(taskStatus)
 			.collectList()         // Converts Flux<TaskEntity> to Mono<List<TaskEntity>>
-			.<ResponseEntity<Object>>map(taskList ->
-			    { List<Object> objectList = new ArrayList<Object>(taskList);
+			.<ResponseEntity<Object>>map(taskList -> {
+			    if (null != taskList && taskList.size() > 0) {
+			      List<Object> objectList = new ArrayList<Object>(taskList);
 			      return ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(goodResponseList(objectList, requestStringBuilderContainer));
-			    })
-			.defaultIfEmpty(ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(displayEmptyList(ENTITY_CLASS_NAME))); // Returns 200 and an empty json List if the Mono is empty
+			    } else {
+				  return ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(displayEmptyList(ENTITY_CLASS_NAME)); // Returns 200 and an empty json List if the Mono is empty 
+			    }
+			});
 	}
 
 	@Override
@@ -54,12 +57,15 @@ public class TaskImpl
 		// map is designed for synchronous, one-to-one data transformations
 		
 		return taskRepository.findAll()
-				.collectList()         // Converts Flux<TaskEntity> to Mono<List<TaskEntity>>
-				.<ResponseEntity<Object>>map(taskList ->
-				    { List<Object> objectList = new ArrayList<Object>(taskList);
-				      return ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(goodResponseList(objectList, requestStringBuilderContainer));
-				    })
-				.defaultIfEmpty(ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(displayEmptyList(ENTITY_CLASS_NAME))); // Returns 200 and an empty json List if the Mono is empty
+			.collectList()         // Converts Flux<TaskEntity> to Mono<List<TaskEntity>>
+			.<ResponseEntity<Object>>map(taskList -> {
+				if (null != taskList && taskList.size() > 0) {
+				  List<Object> objectList = new ArrayList<Object>(taskList);
+				  return ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(goodResponseList(objectList, requestStringBuilderContainer));
+				} else {
+				  return ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(displayEmptyList(ENTITY_CLASS_NAME)); // Returns 200 and an empty json List if the Mono is empty 
+				}
+			});
 	}
 	
 

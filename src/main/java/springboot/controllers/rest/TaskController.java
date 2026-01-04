@@ -113,7 +113,7 @@ public class TaskController
 		
 		if (errorList.size() > 0)
 		{
-			System.out.println("findByStatus - Right before the throw passed");
+//			System.out.println("findByStatus - Right before the throw passed");
 			throw new RequestValidationException(errorList);			
 		}
 		
