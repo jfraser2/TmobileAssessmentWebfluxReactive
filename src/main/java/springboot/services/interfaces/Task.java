@@ -1,14 +1,11 @@
 package springboot.services.interfaces;
 
-import java.util.List;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 
 import reactor.core.publisher.Mono;
 import springboot.autowire.helpers.StringBuilderContainer;
 import springboot.dto.request.CreateTask;
-import springboot.entities.TaskEntity;
 
 public interface Task {
 	

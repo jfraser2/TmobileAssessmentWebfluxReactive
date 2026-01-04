@@ -3,8 +3,6 @@ package springboot.configurations;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
-import org.springframework.web.context.WebApplicationContext;
 
 import springboot.autowire.helpers.ConcurrentRequestLimit;
 import springboot.autowire.helpers.StringBuilderContainer;
