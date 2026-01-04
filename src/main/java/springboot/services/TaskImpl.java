@@ -62,45 +62,30 @@ public class TaskImpl
 
 	@Override
 	@Transactional(propagation = Propagation.REQUIRED)
-	private TaskEntity persistData(TaskEntity taskEntity) {
+	public Mono<ResponseEntity<Object>> buildAndPersistTaskEntity(CreateTask createTaskRequest, ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer) {
 		
-		TaskEntity retVar = null;
-		
-		try {
-			if (null != taskEntity) {
-				retVar = taskRepository.save(taskEntity);
-			}	
-		} catch (Exception e) {
-			retVar = null;
-		}
-		
-		return retVar;
-	}
-
-	@Override
-	public Mono<ResponseEntity<Object>> buildTaskEntity(CreateTask createTaskRequest, ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer) {
-		
-		TaskEntity retVar = null;
+		TaskEntity tempEntity = null;
 		// support CORS - createResponseHeader(request);
 		
-		try {
-			String taskName = createTaskRequest.getTaskName();
-			String taskStatus = createTaskRequest.getTaskStatus();
-			if (null != taskName && taskName.length() > 0 &&
-				null != taskStatus && taskStatus.length() > 0)
-			{
-				retVar = new TaskEntity();
-				retVar.setTaskName(taskName);
-				retVar.setTaskDescription(createTaskRequest.getTaskDescription());
-				retVar.setTaskStatus(taskStatus);
-			    ZonedDateTime zonedDateTime = ZonedDateTimeEnum.INSTANCE.now();
-				retVar.setTaskCreateDate(zonedDateTime);
-			}
-		} catch (Exception e) {
-			retVar = null;
-		}
+		String taskName = createTaskRequest.getTaskName();
+		String taskStatus = createTaskRequest.getTaskStatus();
 		
-		return retVar;
+		tempEntity = new TaskEntity();
+		tempEntity.setTaskName(taskName);
+		tempEntity.setTaskDescription(createTaskRequest.getTaskDescription());
+		tempEntity.setTaskStatus(taskStatus);
+	    ZonedDateTime zonedDateTime = ZonedDateTimeEnum.INSTANCE.now();
+		tempEntity.setTaskCreateDate(zonedDateTime);
+		
+		Mono<TaskEntity> tempMono = Mono.just(tempEntity);
+		
+		// flatMap is designed for asynchronous, one-to-many transformations
+		// map is designed for synchronous, one-to-one data transformations 
+		
+		return  tempMono.flatMap(task -> taskRepository.save(task))
+				.<ResponseEntity<Object>>map(savedEntity ->
+				    { return ResponseEntity.status(HttpStatus.CREATED).headers(createResponseHeader(request)).body(goodResponse(savedEntity, requestStringBuilderContainer, null));
+				});
 	}
 
 }

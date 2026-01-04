@@ -1,15 +1,12 @@
 package springboot.controllers.rest;
 
 import java.nio.file.AccessDeniedException;
-import java.util.ArrayList;
 import java.util.List;
 
 import reactor.core.publisher.Mono;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -26,9 +23,7 @@ import springboot.autowire.helpers.ValidationErrorContainer;
 import springboot.dto.request.CreateTask;
 import springboot.dto.request.GetByStatus;
 import springboot.dto.validation.exceptions.DatabaseRowNotFoundException;
-import springboot.dto.validation.exceptions.EmptyListException;
 import springboot.dto.validation.exceptions.RequestValidationException;
-import springboot.entities.TaskEntity;
 import springboot.errorHandling.helpers.ApiValidationError;
 import springboot.services.interfaces.Task;
 import springboot.services.validation.request.RequestValidationService;
@@ -69,18 +64,8 @@ public class TaskController
 			Mono.error(new RequestValidationException(errorList));
 		}
 		
-		TaskEntity te = taskService.buildTaskEntity(data);
-		TaskEntity savedEntity = taskService.persistData(te);
-		
-		String jsonString = goodResponse(savedEntity, requestStringBuilderContainer, null);
-		te = null;
-		savedEntity = null;
-		
-		// support CORS
-		HttpHeaders aResponseHeader = createResponseHeader(request);
-		
 		// 201 response
-		return new ResponseEntity<>(jsonString, aResponseHeader, HttpStatus.CREATED);
+		return taskService.buildAndPersistTaskEntity(data, request, requestStringBuilderContainer);
 	}
 	
 	// Mono controller method will automatically subscribe()
