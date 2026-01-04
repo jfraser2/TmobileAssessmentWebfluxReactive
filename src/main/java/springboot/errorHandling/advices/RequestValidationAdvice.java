@@ -5,19 +5,17 @@ import java.nio.file.AccessDeniedException;
 //import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
+import reactor.core.publisher.Mono;
 import springboot.dto.validation.exceptions.DatabaseRowNotFoundException;
 import springboot.dto.validation.exceptions.EmptyListException;
 import springboot.dto.validation.exceptions.RequestValidationException;
@@ -39,33 +37,15 @@ import springboot.errorHandling.helpers.ApiError;
 //@Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice
 public class RequestValidationAdvice
-	extends  ResponseEntityExceptionHandler 
 {
 	protected static final String UNEXPECTED_PROCESSING_ERROR = "{\"message\": \"Object could not convert to json\"}";
 
-	@Override
-	protected ResponseEntity<Object> handleHttpMessageNotReadable(
-		HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request)
-	{
-		ApiError apiError = new ApiError();
-		
-		String error = "Malformed JSON request";
-		
-		apiError.setRequestStatus(HttpStatus.BAD_REQUEST);
-		apiError.setMessage(error);
-		apiError.setDebugMessage(ex.getLocalizedMessage());
-		
-		String json = convertApiErrorToJson(apiError);
-		apiError = null;
-		
-	    return buildResponseEntity(json, HttpStatus.BAD_REQUEST, request);
-	}
 
 	//other exception handlers or handler overrides below
 	
     @ExceptionHandler({ AccessDeniedException.class })
-    public ResponseEntity<Object> handleAccessDeniedException(
-    		AccessDeniedException ex, WebRequest request)
+    public Mono<ResponseEntity<Object>> handleAccessDeniedException(
+    		AccessDeniedException ex, ServerHttpRequest request)
     {
 		ApiError apiError = new ApiError();
 		apiError.setRequestStatus(HttpStatus.FORBIDDEN);
@@ -80,8 +60,8 @@ public class RequestValidationAdvice
     }
 	
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Object> handleIllegalArgumentException(
-    		IllegalArgumentException ex, WebRequest request)
+    public Mono<ResponseEntity<Object>> handleIllegalArgumentException(
+    		IllegalArgumentException ex, ServerHttpRequest request)
     {
 		ApiError apiError = new ApiError();
 		apiError.setRequestStatus(HttpStatus.BAD_REQUEST);
@@ -95,8 +75,8 @@ public class RequestValidationAdvice
     }
     
     @ExceptionHandler(DatabaseRowNotFoundException.class)
-    public ResponseEntity<Object> handleDatabaseRowNotFoundException(
-    	DatabaseRowNotFoundException ex, WebRequest request)
+    public Mono<ResponseEntity<Object>> handleDatabaseRowNotFoundException(
+    	DatabaseRowNotFoundException ex, ServerHttpRequest request)
     {
 		ApiError apiError = new ApiError();
 		apiError.setRequestStatus(HttpStatus.NOT_FOUND);
@@ -110,8 +90,8 @@ public class RequestValidationAdvice
     }
     
     @ExceptionHandler(EmptyListException.class)
-    public ResponseEntity<Object> handleEmptyListException(
-    	EmptyListException ex, WebRequest request)
+    public Mono<ResponseEntity<Object>> handleEmptyListException(
+    	EmptyListException ex, ServerHttpRequest request)
     {
     	String json = null;
         String rawJson = "{\"requestStatus\": \"OK\"," + "\"" + ex.getClassName() + "\": []}";
@@ -132,8 +112,8 @@ public class RequestValidationAdvice
     }
     
     @ExceptionHandler(RequestValidationException.class)
-    public ResponseEntity<Object> handleRequestValidationException(
-    	RequestValidationException ex, WebRequest request)
+    public Mono<ResponseEntity<Object>> handleRequestValidationException(
+    	RequestValidationException ex, ServerHttpRequest request)
     {
 		ApiError apiError = new ApiError();
 		apiError.setRequestStatus(HttpStatus.BAD_REQUEST);
@@ -148,12 +128,12 @@ public class RequestValidationAdvice
         return buildResponseEntity(json, HttpStatus.BAD_REQUEST, request);
     }
 	 
-	private ResponseEntity<Object> buildResponseEntity(String json, HttpStatus aStatus, WebRequest request)
+	private Mono<ResponseEntity<Object>> buildResponseEntity(String json, HttpStatus aStatus, ServerHttpRequest request)
 	{
 		// support CORS
 		HttpHeaders aResponseHeader = createResponseHeader(request);
 		
-		return new ResponseEntity<>(json, aResponseHeader, aStatus);
+		return Mono.just(new ResponseEntity<>(json, aResponseHeader, aStatus));
 	}
 	
 	private String convertApiErrorToJson(ApiError apiError)
@@ -173,14 +153,15 @@ public class RequestValidationAdvice
 		return json;
 	}
 	
-	private HttpHeaders createResponseHeader(WebRequest request)
+	private HttpHeaders createResponseHeader(ServerHttpRequest request)
 	{
 		// support CORS
 //		System.out.println("Access-Control-Allow-Origin is: " + request.getHeader("Origin"));
 		HttpHeaders aResponseHeader = new HttpHeaders();
 		
 		if (null != request) {
-			String tempOrigin = request.getHeader("Origin");
+//			String tempOrigin = request.getHeader("Origin");
+			String tempOrigin = request.getHeaders().getOrigin();			
 			if (null != tempOrigin && tempOrigin.length() > 0) {
 				aResponseHeader.add("Access-Control-Allow-Origin", tempOrigin);
 			}	

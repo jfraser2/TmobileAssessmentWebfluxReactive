@@ -1,14 +1,19 @@
 package springboot.services;
 
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import reactor.core.publisher.Mono;
+import springboot.autowire.helpers.StringBuilderContainer;
 import springboot.dto.request.CreateTask;
 import springboot.entities.TaskEntity;
 import springboot.enums.ZonedDateTimeEnum;
@@ -17,40 +22,47 @@ import springboot.services.interfaces.Task;
 
 @Service
 public class TaskImpl
+    extends ServiceBase
 	implements Task
 {
+	
+	private static final String ENTITY_CLASS_NAME = "TaskEntity";
 	@Autowired
 	private TaskRepository taskRepository;
 	
 	@Override
 	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
-	public  List<TaskEntity> findByTaskStatus(String taskStatus) {
-		List<TaskEntity> retVar = null;
+	public Mono<ResponseEntity<Object>> findByTaskStatus(String taskStatus, ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer) {
 		
-		retVar = taskRepository.findByTaskStatus(taskStatus)
-				 .collectList()         // Converts Flux<TaskEntity> to Mono<List<TaskEntity>>
-				 .map(task-> { return task; });
-		
-		
-		return retVar;
+		// support CORS - createResponseHeader(request);
+		return taskRepository.findByTaskStatus(taskStatus)
+			.collectList()         // Converts Flux<TaskEntity> to Mono<List<TaskEntity>>
+			.<ResponseEntity<Object>>map(taskList ->
+			    { List<Object> objectList = new ArrayList<Object>(taskList);
+			      return ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(goodResponseList(objectList, requestStringBuilderContainer));
+			    })
+			.defaultIfEmpty(ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(displayEmptyList(ENTITY_CLASS_NAME))); // Returns 200 and an empty json List if the Mono is empty
 	}
 
 	@Override
 	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
-	public List<TaskEntity> findAll() {
-		List<TaskEntity> retVar = null;
+	public Mono<ResponseEntity<Object>> findAll(ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer) {
 		
-		List<TaskEntity> usne = taskRepository.findAll();
-		if (null != usne)
-			retVar = usne;
+		// support CORS - createResponseHeader(request);
 		
-		return retVar;
+		return taskRepository.findAll()
+				.collectList()         // Converts Flux<TaskEntity> to Mono<List<TaskEntity>>
+				.<ResponseEntity<Object>>map(taskList ->
+				    { List<Object> objectList = new ArrayList<Object>(taskList);
+				      return ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(goodResponseList(objectList, requestStringBuilderContainer));
+				    })
+				.defaultIfEmpty(ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(displayEmptyList(ENTITY_CLASS_NAME))); // Returns 200 and an empty json List if the Mono is empty
 	}
 	
 
 	@Override
 	@Transactional(propagation = Propagation.REQUIRED)
-	public TaskEntity persistData(TaskEntity taskEntity) {
+	private TaskEntity persistData(TaskEntity taskEntity) {
 		
 		TaskEntity retVar = null;
 		
@@ -66,9 +78,10 @@ public class TaskImpl
 	}
 
 	@Override
-	public TaskEntity buildTaskEntity(CreateTask createTaskRequest) {
+	public Mono<ResponseEntity<Object>> buildTaskEntity(CreateTask createTaskRequest, ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer) {
 		
 		TaskEntity retVar = null;
+		// support CORS - createResponseHeader(request);
 		
 		try {
 			String taskName = createTaskRequest.getTaskName();

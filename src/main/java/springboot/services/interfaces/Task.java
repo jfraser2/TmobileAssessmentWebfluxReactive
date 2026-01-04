@@ -3,16 +3,18 @@ package springboot.services.interfaces;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 
 import reactor.core.publisher.Mono;
+import springboot.autowire.helpers.StringBuilderContainer;
 import springboot.dto.request.CreateTask;
 import springboot.entities.TaskEntity;
 
 public interface Task {
 	
-	public Mono<ResponseEntity<Object>> findByTaskStatus(String taskStatus);
-	public Mono<ResponseEntity<Object>> findAll();
+	public Mono<ResponseEntity<Object>> findByTaskStatus(String taskStatus, ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer);
+	public Mono<ResponseEntity<Object>> findAll(ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer);
 	
-	public Mono<ResponseEntity<Object>> buildTaskEntity(CreateTask createTaskRequest);
+	public Mono<ResponseEntity<Object>> buildTaskEntity(CreateTask createTaskRequest, ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer);
 
 }

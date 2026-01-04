@@ -8,6 +8,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.gson.Gson;
@@ -266,6 +267,26 @@ public abstract class ServiceBase {
 		
 		return aResponseHeader;
 		
+	}
+	
+	protected String displayEmptyList(String entityClassName) {
+		
+    	String json = null;
+        String rawJson = "{\"requestStatus\": \"OK\"," + "\"" + entityClassName + "\": []}";
+		try {
+			ObjectMapper mapper = MapperEnum.INSTANCE.getObjectMapper();			
+			if (null != rawJson)
+			{
+				JsonNode rootNode = mapper.readTree(rawJson);
+				json = rootNode.toPrettyString();
+			}
+		}
+		catch(JsonProcessingException jpe)
+		{
+			json = null;
+		}
+		
+		return json;
 	}
 	
 }

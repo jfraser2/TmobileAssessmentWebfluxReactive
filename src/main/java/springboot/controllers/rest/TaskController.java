@@ -66,7 +66,7 @@ public class TaskController
 		if (errorList.size() > 0)
 		{
 //			System.out.println("Right before the throw");
-			throw new RequestValidationException(errorList);
+			Mono.error(new RequestValidationException(errorList));
 		}
 		
 		TaskEntity te = taskService.buildTaskEntity(data);
@@ -89,26 +89,10 @@ public class TaskController
 			produces = MediaType.APPLICATION_JSON_VALUE
 	)
 	public Mono<ResponseEntity<Object>> allTasks(ServerHttpRequest request)
-		throws EmptyListException, AccessDeniedException
+		throws AccessDeniedException
 	{
+		return taskService.findAll(request, requestStringBuilderContainer);
 		
-		List<TaskEntity> aList = taskService.findAll();
-		boolean isEmpty = true;
-		if(null != aList && aList.size() > 0) {
-			isEmpty = false;
-		}
-		
-		if(isEmpty) {
-			throw new EmptyListException("Task Table is empty.", "TaskEntity");
-		}
-		
-		List<Object> objectList = new ArrayList<Object>(aList);
-		String jsonString = goodResponseList(objectList, requestStringBuilderContainer);
-		
-		// support CORS
-		HttpHeaders aResponseHeader = createResponseHeader(request);
-		
-		return new ResponseEntity<>(jsonString, aResponseHeader, HttpStatus.OK);
 	}
 	
 	// Mono controller method will automatically subscribe()
@@ -118,7 +102,7 @@ public class TaskController
 	)
 	public Mono<ResponseEntity<Object>> findByTaskStatus(@PathVariable(required = true) String taskStatus,
 		ServerHttpRequest request, @Parameter(hidden = true) @Autowired RequestValidationService<GetByStatus> getByTaskStatusValidation)
-		throws RequestValidationException, EmptyListException, AccessDeniedException
+		throws RequestValidationException, AccessDeniedException
 	{
 		
 		GetByStatus data = new GetByStatus(taskStatus);
@@ -128,28 +112,11 @@ public class TaskController
 		if (errorList.size() > 0)
 		{
 //			System.out.println("Right before the throw");
-			throw new RequestValidationException(errorList);
+			Mono.error(new RequestValidationException(errorList));			
 		}
 		
-/*		
-		List<TaskEntity> statusList = taskService.findByTaskStatus(taskStatus);
-		boolean isEmpty = true;
-		if(null != statusList && statusList.size() > 0) {
-			isEmpty = false;
-		}
 		
-		if(isEmpty) {
-			throw new EmptyListException("No Task Table rows exist for Task Status: " + taskStatus, "TaskEntity");
-		}
-		
-		List<Object> objectList = new ArrayList<Object>(statusList);
-		String jsonString = goodResponseList(objectList, requestStringBuilderContainer);
-		
-		// support CORS
-		HttpHeaders aResponseHeader = createResponseHeader(request);
-*/		
-		
-		return taskService.findByTaskStatus(taskStatus);
+		return taskService.findByTaskStatus(taskStatus, request, requestStringBuilderContainer);
 	}
 	
 }
