@@ -5,8 +5,11 @@ import java.util.List;
 
 import reactor.core.publisher.Mono;
 
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -31,17 +34,17 @@ import springboot.services.validation.request.RequestValidationService;
 @RestController
 @RequestMapping(path="/rest/api")
 public class TaskController
+	implements ApplicationContextAware 
 {
+	private ApplicationContext applicationContext;
+	
 	@Autowired
 	private Task taskService;
 	
-	@Autowired
-	@Qualifier("requestValidationErrorsContainer")
-	private ValidationErrorContainer requestValidationErrorsContainer;
-	
-	@Autowired
-	@Qualifier("requestStringBuilderContainer")
-	private StringBuilderContainer requestStringBuilderContainer;
+	@Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
 	
 	// Mono controller method will automatically subscribe()
 	@RequestMapping(method = {RequestMethod.POST},
@@ -53,6 +56,11 @@ public class TaskController
 		ServerHttpRequest request,  @Parameter(hidden = true) @Autowired RequestValidationService<CreateTask> createTaskValidation)
 		throws RequestValidationException, DatabaseRowNotFoundException, AccessDeniedException
 	{
+		
+		StringBuilderContainer requestStringBuilderContainer = 
+			(StringBuilderContainer) this.applicationContext.getBean("requestStringBuilderContainer");
+		ValidationErrorContainer requestValidationErrorsContainer = 
+			(ValidationErrorContainer) this.applicationContext.getBean("requestValidationErrorsContainer");		
 		
 		// single field validation
 		createTaskValidation.validateRequest(data, requestValidationErrorsContainer, null);
@@ -76,6 +84,9 @@ public class TaskController
 	public Mono<ResponseEntity<Object>> allTasks(ServerHttpRequest request)
 		throws AccessDeniedException
 	{
+		StringBuilderContainer requestStringBuilderContainer = 
+			(StringBuilderContainer) this.applicationContext.getBean("requestStringBuilderContainer");
+		
 		return taskService.findAll(request, requestStringBuilderContainer);
 		
 	}
@@ -89,6 +100,11 @@ public class TaskController
 		ServerHttpRequest request, @Parameter(hidden = true) @Autowired RequestValidationService<GetByStatus> getByTaskStatusValidation)
 		throws RequestValidationException, AccessDeniedException
 	{
+		
+		StringBuilderContainer requestStringBuilderContainer = 
+			(StringBuilderContainer) this.applicationContext.getBean("requestStringBuilderContainer");
+		ValidationErrorContainer requestValidationErrorsContainer = 
+				(ValidationErrorContainer) this.applicationContext.getBean("requestValidationErrorsContainer");		
 		
 		GetByStatus data = new GetByStatus(taskStatus);
 		getByTaskStatusValidation.validateRequest(data, requestValidationErrorsContainer, null);

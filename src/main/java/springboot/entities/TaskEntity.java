@@ -4,6 +4,8 @@ import java.time.ZonedDateTime;
 
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.TimeZoneStorageType;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -11,8 +13,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import springboot.errorHandling.helpers.ZonedDateTimeConverter;
 
 @Table(name = "Tasks")

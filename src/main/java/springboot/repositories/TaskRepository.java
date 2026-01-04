@@ -13,7 +13,7 @@ import springboot.entities.TaskEntity;
 // in this case it might be an empty list
 // the actual database operation doesn't happen immediately
 public interface TaskRepository extends ReactiveCrudRepository<TaskEntity, Long>{
-    @Query(value = "SELECT entity FROM TaskEntity entity WHERE entity.taskStatus = :taskStatus")
+    @Query(value = "SELECT * FROM Tasks t WHERE t.task_status = :taskStatus")
     Flux<TaskEntity> findByTaskStatus(@Param("taskStatus") String taskStatus);
 	
 }

@@ -31,7 +31,7 @@ public class TaskImpl
 	private TaskRepository taskRepository;
 	
 	@Override
-	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+//	@Transactional(propagation = Propagation.REQUIRED)
 	public Mono<ResponseEntity<Object>> findByTaskStatus(String taskStatus, ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer) {
 		
 		// support CORS - createResponseHeader(request);
@@ -45,7 +45,7 @@ public class TaskImpl
 	}
 
 	@Override
-	@Transactional(propagation = Propagation.REQUIRED, readOnly = true)
+//	@Transactional(propagation = Propagation.REQUIRED)
 	public Mono<ResponseEntity<Object>> findAll(ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer) {
 		
 		// support CORS - createResponseHeader(request);
@@ -61,7 +61,7 @@ public class TaskImpl
 	
 
 	@Override
-	@Transactional(propagation = Propagation.REQUIRED)
+//	@Transactional(propagation = Propagation.REQUIRED)
 	public Mono<ResponseEntity<Object>> buildAndPersistTaskEntity(CreateTask createTaskRequest, ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer) {
 		
 		TaskEntity tempEntity = null;
