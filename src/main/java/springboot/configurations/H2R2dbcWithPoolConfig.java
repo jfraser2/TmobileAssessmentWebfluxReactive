@@ -40,7 +40,7 @@ public class H2R2dbcWithPoolConfig {
     	String envValue = env.getProperty("spring.r2dbc.pool.enabled");
     	System.out.println("Before The H2 Connection Pool Test: " + envValue);
     	
-    	Boolean testPoolEnabled = false;
+    	Boolean testPoolEnabled = true;
     	if (null != envValue) {
     		testPoolEnabled = Boolean.valueOf(envValue);
     	}
