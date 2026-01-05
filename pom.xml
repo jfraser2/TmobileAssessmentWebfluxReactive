@@ -146,7 +146,6 @@
 		<dependency>
 		    <groupId>io.r2dbc</groupId>
 		    <artifactId>r2dbc-h2</artifactId>
-			<scope>runtime</scope>		    
 		</dependency>
 		
 <!--   11.0.8 is latest, managed version is 1.0.0.RELEASE -->
