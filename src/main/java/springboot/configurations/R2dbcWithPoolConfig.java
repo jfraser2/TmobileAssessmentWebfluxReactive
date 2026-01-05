@@ -19,7 +19,7 @@ import io.r2dbc.spi.ConnectionFactory;
 @Configuration
 @EnableR2dbcRepositories(basePackages = "springboot.repositories")
 @EnableR2dbcAuditing // Optional: if you use R2DBC auditing features
-public class H2R2dbcWithPoolConfig {
+public class R2dbcWithPoolConfig {
 	
     @Autowired
     Environment env;
