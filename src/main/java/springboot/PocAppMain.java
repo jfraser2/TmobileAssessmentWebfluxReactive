@@ -5,9 +5,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 //import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.data.r2dbc.config.EnableR2dbcAuditing;
-import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /* @SpringBootApplicaton is the combination of
  *  @EnableAutoConfiguration, @ComponentScan and @Configuration annotations.
@@ -15,9 +12,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @SpringBootApplication
 @EntityScan(basePackages = {"springboot.entities"})
-@EnableR2dbcRepositories(basePackages = "springboot.repositories")
-@EnableTransactionManagement
-@EnableR2dbcAuditing // Optional: if you use R2DBC auditing features
 @ComponentScan(basePackages = {"springboot", "springboot.configurations"})
 public class PocAppMain    // Proof of Concept App Main
 {
