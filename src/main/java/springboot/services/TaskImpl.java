@@ -11,6 +11,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.reactive.TransactionalOperator;
 
 import reactor.core.publisher.Mono;
 import springboot.autowire.helpers.StringBuilderContainer;
@@ -20,6 +21,15 @@ import springboot.enums.ZonedDateTimeEnum;
 import springboot.repositories.TaskRepository;
 import springboot.services.interfaces.Task;
 
+// helpful article
+// https://www.google.com/search?q=reactvie+transaction+Manager+and+r2dbc+repository+example+java&rlz=1C1JSBI_enUS1092US1092&oq=reactvie+transaction+Manager+and+r2dbc+repository+example+java&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIHCAEQIRiPAjIHCAIQIRiPAtIBCjQ4ODY0ajBqMTWoAgiwAgHxBVuDNjJhmoNx8QVbgzYyYZqDcQ&sourceid=chrome&ie=UTF-8
+
+// Alternatively, for simple operations, the @Transactional annotation works
+// if the method returns a reactive type (Mono or Flux)
+
+// Warning Message
+// See http://www.h2database.com/html/features.html#read_only
+
 @Service
 public class TaskImpl
     extends ServiceBase
@@ -27,8 +37,12 @@ public class TaskImpl
 {
 	
 	private static final String ENTITY_CLASS_NAME = "TaskEntity";
+	
 	@Autowired
 	private TaskRepository taskRepository;
+	
+	@Autowired
+	private TransactionalOperator transactionalOperator;	
 	
 	@Override
 	@Transactional(propagation = Propagation.REQUIRED)
