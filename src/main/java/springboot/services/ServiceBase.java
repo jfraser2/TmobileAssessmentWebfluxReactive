@@ -289,4 +289,8 @@ public abstract class ServiceBase {
 		return json;
 	}
 	
+	protected String buildNoDatabaseRowMessage(String tableName, Long rowId) {
+		return "The " + tableName + " for Id: " + rowId + " does not exist.";
+	}
+	
 }

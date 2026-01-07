@@ -16,6 +16,7 @@ import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 import springboot.autowire.helpers.StringBuilderContainer;
 import springboot.dto.request.CreateTask;
+import springboot.dto.validation.exceptions.DatabaseRowNotFoundException;
 import springboot.entities.TaskEntity;
 import springboot.enums.ZonedDateTimeEnum;
 import springboot.repositories.TaskRepository;
@@ -37,6 +38,7 @@ public class TaskImpl
 {
 	
 	private static final String ENTITY_CLASS_NAME = "TaskEntity";
+	private static final String ENTITY_TABLE_NAME = "Tasks";
 	
 	@Autowired
 	private TaskRepository taskRepository;
@@ -116,10 +118,14 @@ public class TaskImpl
 
 	
 	@Override
-	public Mono<TaskEntity> findById(Long id) {
+	public Mono<ResponseEntity<Object>> findById(Long id, ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer) {
 		
 		return taskRepository.findById(id)
-				 .as(readOnlyTransactionalOperator::transactional); // Wrap the operations in a transaction
+	            .switchIfEmpty(Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(ENTITY_TABLE_NAME, id))))
+	            .<ResponseEntity<Object>>map(task -> {
+					return ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(goodResponse(task, requestStringBuilderContainer, null));
+				})
+				.as(readOnlyTransactionalOperator::transactional); // Wrap the operations in a transaction
 	}
 	
 /*
