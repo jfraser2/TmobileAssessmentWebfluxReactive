@@ -42,7 +42,10 @@ public class TaskImpl
 	private TaskRepository taskRepository;
 	
 	@Autowired
-	private TransactionalOperator transactionalOperator;	
+	private TransactionalOperator transactionalOperator;
+	
+	@Autowired
+	private TransactionalOperator readOnlyTransactionalOperator;	
 	
 	@Override
 	@Transactional(propagation = Propagation.REQUIRED)
@@ -110,5 +113,16 @@ public class TaskImpl
 				    { return ResponseEntity.status(HttpStatus.CREATED).headers(createResponseHeader(request)).body(goodResponse(savedEntity, requestStringBuilderContainer, null));
 				});
 	}
+
+	
+	@Override
+	public Mono<TaskEntity> findById(Long id) {
+		
+		// map is designed for synchronous, one-to-one data transformations 
+		
+//		readOnlyTransactionalOperator.
+		return taskRepository.findById(id);
+	}
+	
 
 }
