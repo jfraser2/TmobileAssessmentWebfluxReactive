@@ -116,11 +116,9 @@ public class TaskImpl
 
 	
 	@Override
+	@Transactional(propagation = Propagation.REQUIRED)
 	public Mono<TaskEntity> findById(Long id) {
 		
-		// map is designed for synchronous, one-to-one data transformations 
-		
-//		readOnlyTransactionalOperator.
 		return taskRepository.findById(id);
 	}
 	
