@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import springboot.autowire.helpers.StringBuilderContainer;
 import springboot.autowire.helpers.ValidationErrorContainer;
 import springboot.dto.request.CreateTask;
+import springboot.dto.request.GetById;
 import springboot.dto.request.GetByStatus;
 import springboot.dto.validation.exceptions.DatabaseRowNotFoundException;
 import springboot.dto.validation.exceptions.RequestValidationException;
@@ -119,6 +120,35 @@ public class TaskController
 		
 		
 		return taskService.findByTaskStatus(data.getTaskStatus(), request, requestStringBuilderContainer);
+	}
+	
+	// Mono controller method will automatically subscribe()
+	@RequestMapping(method = {RequestMethod.GET},
+			path = "/v1/findByTaskId/{taskId}",
+			produces = MediaType.APPLICATION_JSON_VALUE
+	)
+	public Mono<ResponseEntity<Object>> findByTaskId(@PathVariable(required = true) String taskId,
+		ServerHttpRequest request, @Parameter(hidden = true) @Autowired RequestValidationService<GetById> getByTaskIdValidation)
+		throws RequestValidationException, AccessDeniedException
+	{
+		
+		StringBuilderContainer requestStringBuilderContainer = 
+			(StringBuilderContainer) this.applicationContext.getBean("requestStringBuilderContainer");
+		ValidationErrorContainer requestValidationErrorsContainer = 
+				(ValidationErrorContainer) this.applicationContext.getBean("requestValidationErrorsContainer");		
+		
+		GetById data = new GetById(URLDecoder.decode(taskId, StandardCharsets.UTF_8));
+		getByTaskIdValidation.validateRequest(data, requestValidationErrorsContainer, null);
+		List<ApiValidationError> errorList = requestValidationErrorsContainer.getValidationErrorList();
+		
+		if (errorList.size() > 0)
+		{
+//			System.out.println("findByTaskId - Right before the throw passed");
+			throw new RequestValidationException(errorList);			
+		}
+		
+		Long tempLong = Long.valueOf(data.getId());
+		return taskService.findByTaskId(tempLong, request, requestStringBuilderContainer);
 	}
 	
 }

@@ -14,6 +14,6 @@ public interface Task {
 	
 	public Mono<ResponseEntity<Object>> buildAndPersistTaskEntity(CreateTask createTaskRequest, ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer);
 	
-	public Mono<ResponseEntity<Object>> findById(Long id, ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer);
+	public Mono<ResponseEntity<Object>> findByTaskId(Long id, ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer);
 
 }
