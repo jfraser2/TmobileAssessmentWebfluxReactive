@@ -120,6 +120,8 @@ public class TaskImpl
 	@Override
 	public Mono<ResponseEntity<Object>> findById(Long id, ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer) {
 		
+		// map is designed for synchronous, one-to-one data transformations 
+		
 		return taskRepository.findById(id)
 	            .switchIfEmpty(Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(ENTITY_TABLE_NAME, id))))
 	            .<ResponseEntity<Object>>map(task -> {
