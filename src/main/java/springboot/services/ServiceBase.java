@@ -19,6 +19,7 @@ import com.google.gson.JsonParser;
 import springboot.autowire.helpers.StringBuilderContainer;
 import springboot.dto.response.NonModelAdditionalFields;
 import springboot.dto.response.ResultStatus;
+import springboot.enums.GsonEnum;
 import springboot.enums.MapperEnum;
 import springboot.errorHandling.helpers.ZonedDateTimeAdapter;
 
@@ -59,8 +60,8 @@ public abstract class ServiceBase {
 		try {
 			if (null != rawJsonString && rawJsonString.length() > 0)
 			{
-//				Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
-				Gson gson = new GsonBuilder().setPrettyPrinting().create();
+//				Gson gson = GsonEnum.INSTANCE.getGsonPrettyPrint();
+				Gson gson = GsonEnum.INSTANCE.getGsonExcludeNullsPrettyPrint();
 				
 				JsonElement jsonElement = JsonParser.parseString(rawJsonString);				
 				jsonString = gson.toJson(jsonElement);
@@ -83,8 +84,8 @@ public abstract class ServiceBase {
 		try {
 			if (null != anObjectList && anObjectList.size() > 0)
 			{
-//				Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
-				Gson gson = new GsonBuilder().setPrettyPrinting().create();
+//				Gson gson = GsonEnum.INSTANCE.getGsonPrettyPrint();
+				Gson gson = GsonEnum.INSTANCE.getGsonExcludeNullsPrettyPrint();
 				jsonString = gson.toJson(anObjectList);
 			}
 		}
@@ -105,10 +106,12 @@ public abstract class ServiceBase {
 		try {
 			if (null != anObjectList && anObjectList.size() > 0)
 			{
-		        GsonBuilder gsonBuilder = new GsonBuilder();
-		        gsonBuilder.registerTypeAdapter(ZonedDateTime.class, new ZonedDateTimeAdapter());
-//		        Gson gson = gsonBuilder.serializeNulls().create();
-		        Gson gson = gsonBuilder.create();
+		        GsonBuilder gsonBuilder = GsonEnum.INSTANCE.getGsonBuilder();
+		        GsonBuilder tempGsonBuilder =  GsonEnum.INSTANCE.registerTypeAdapter(gsonBuilder, ZonedDateTime.class, new ZonedDateTimeAdapter());
+		        
+//		        Gson gson = GsonEnum.INSTANCE.getGsonNoPrettyPrint(tempGsonBuilder);
+		        Gson gson = GsonEnum.INSTANCE.getGsonExcludedNullsNoPrettyPrint(tempGsonBuilder);
+		        
 				jsonString = gson.toJson(anObjectList);
 			}
 		}
