@@ -9,8 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
+//import org.springframework.transaction.annotation.Propagation;
+//import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.reactive.TransactionalOperator;
 
 import reactor.core.publisher.Mono;
@@ -48,7 +48,6 @@ public class TaskImpl
 	private TransactionalOperator readOnlyTransactionalOperator;	
 	
 	@Override
-	@Transactional(propagation = Propagation.REQUIRED)
 	public Mono<ResponseEntity<Object>> findByTaskStatus(String taskStatus, ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer) {
 		
 		// support CORS - createResponseHeader(request);
@@ -63,11 +62,11 @@ public class TaskImpl
 			    } else {
 				  return ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(displayEmptyList(ENTITY_CLASS_NAME)); // Returns 200 and an empty json List if the Mono is empty 
 			    }
-			});
+			})
+			.as(readOnlyTransactionalOperator::transactional); // Wrap the operations in a transaction
 	}
 
 	@Override
-	@Transactional(propagation = Propagation.REQUIRED)
 	public Mono<ResponseEntity<Object>> findAll(ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer) {
 		
 		// support CORS - createResponseHeader(request);
@@ -82,12 +81,12 @@ public class TaskImpl
 				} else {
 				  return ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(displayEmptyList(ENTITY_CLASS_NAME)); // Returns 200 and an empty json List if the Mono is empty 
 				}
-			});
+			})
+			.as(readOnlyTransactionalOperator::transactional); // Wrap the operations in a transaction
 	}
 	
 
 	@Override
-	@Transactional(propagation = Propagation.REQUIRED)
 	public Mono<ResponseEntity<Object>> buildAndPersistTaskEntity(CreateTask createTaskRequest, ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer) {
 		
 		TaskEntity tempEntity = null;
@@ -111,16 +110,30 @@ public class TaskImpl
 		return  tempMono.flatMap(task -> taskRepository.save(task))
 				.<ResponseEntity<Object>>map(savedEntity ->
 				    { return ResponseEntity.status(HttpStatus.CREATED).headers(createResponseHeader(request)).body(goodResponse(savedEntity, requestStringBuilderContainer, null));
-				});
+				})
+				.as(transactionalOperator::transactional); // Wrap the operations in a transaction
 	}
 
 	
 	@Override
-	@Transactional(propagation = Propagation.REQUIRED)
 	public Mono<TaskEntity> findById(Long id) {
 		
-		return taskRepository.findById(id);
+		return taskRepository.findById(id)
+				 .as(readOnlyTransactionalOperator::transactional); // Wrap the operations in a transaction
 	}
 	
-
+/*
+    public Mono<User> updateUserNameInTransaction(Long id, String newName) {
+        // The entire chain within the .as(operator::transactional) block runs in a single transaction
+        return userRepository.findById(id)
+            .switchIfEmpty(Mono.error(new RuntimeException("User not found")))
+            .flatMap(user -> {
+                user.setName(newName);
+                // Additional operations can be chained here, e.g., saving related entities
+                return userRepository.save(user);
+            })
+            .as(transactionalOperator::transactional); // Wrap the operations in a transaction
+    }
+*/    
+    
 }
