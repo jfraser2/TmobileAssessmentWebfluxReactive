@@ -37,6 +37,11 @@ public class TaskEntity {
     @Column(name = "task_create_date", nullable = false)
     @TimeZoneStorage(TimeZoneStorageType.NATIVE)
     private ZonedDateTime  taskCreateDate;
+	
+	@JsonSerialize(using = ZonedDateTimeConverter.class)
+    @Column(name = "task_last_update_date", nullable = true)
+    @TimeZoneStorage(TimeZoneStorageType.NATIVE)
+    private ZonedDateTime  taskLastUpdateDate;	
 
 	public Long getId() {
 		return id;
@@ -77,6 +82,13 @@ public class TaskEntity {
 	public void setTaskCreateDate(ZonedDateTime taskCreateDate) {
 		this.taskCreateDate = taskCreateDate;
 	}
-    
+
+	public ZonedDateTime getTaskLastUpdateDate() {
+		return taskLastUpdateDate;
+	}
+
+	public void setTaskLastUpdateDate(ZonedDateTime taskLastUpdateDate) {
+		this.taskLastUpdateDate = taskLastUpdateDate;
+	}
 
 }

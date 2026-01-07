@@ -59,7 +59,8 @@ public abstract class ServiceBase {
 		try {
 			if (null != rawJsonString && rawJsonString.length() > 0)
 			{
-				Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
+//				Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
+				Gson gson = new GsonBuilder().setPrettyPrinting().create();
 				
 				JsonElement jsonElement = JsonParser.parseString(rawJsonString);				
 				jsonString = gson.toJson(jsonElement);
@@ -82,7 +83,8 @@ public abstract class ServiceBase {
 		try {
 			if (null != anObjectList && anObjectList.size() > 0)
 			{
-				Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
+//				Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
+				Gson gson = new GsonBuilder().setPrettyPrinting().create();
 				jsonString = gson.toJson(anObjectList);
 			}
 		}
@@ -105,7 +107,8 @@ public abstract class ServiceBase {
 			{
 		        GsonBuilder gsonBuilder = new GsonBuilder();
 		        gsonBuilder.registerTypeAdapter(ZonedDateTime.class, new ZonedDateTimeAdapter());
-		        Gson gson = gsonBuilder.serializeNulls().create();
+//		        Gson gson = gsonBuilder.serializeNulls().create();
+		        Gson gson = gsonBuilder.create();
 				jsonString = gson.toJson(anObjectList);
 			}
 		}

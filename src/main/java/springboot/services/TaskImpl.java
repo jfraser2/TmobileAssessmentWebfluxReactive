@@ -38,7 +38,7 @@ public class TaskImpl
 {
 	
 	private static final String ENTITY_CLASS_NAME = "TaskEntity";
-	private static final String ENTITY_TABLE_NAME = "Tasks";
+	private static final String NOT_FOUND_TABLE_NAME = "Task";
 	
 	@Autowired
 	private TaskRepository taskRepository;
@@ -103,6 +103,7 @@ public class TaskImpl
 		tempEntity.setTaskStatus(taskStatus);
 	    ZonedDateTime zonedDateTime = ZonedDateTimeEnum.INSTANCE.now();
 		tempEntity.setTaskCreateDate(zonedDateTime);
+		tempEntity.setTaskLastUpdateDate(null);
 		
 		Mono<TaskEntity> tempMono = Mono.just(tempEntity);
 		
@@ -118,12 +119,12 @@ public class TaskImpl
 
 	
 	@Override
-	public Mono<ResponseEntity<Object>> findById(Long id, ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer) {
+	public Mono<ResponseEntity<Object>> findByTaskId(Long id, ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer) {
 		
 		// map is designed for synchronous, one-to-one data transformations 
 		
 		return taskRepository.findById(id)
-	            .switchIfEmpty(Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(ENTITY_TABLE_NAME, id))))
+	            .switchIfEmpty(Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(NOT_FOUND_TABLE_NAME, id))))
 	            .<ResponseEntity<Object>>map(task -> {
 					return ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(goodResponse(task, requestStringBuilderContainer, null));
 				})
