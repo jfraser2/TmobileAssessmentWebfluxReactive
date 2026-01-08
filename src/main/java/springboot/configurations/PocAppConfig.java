@@ -14,7 +14,7 @@ public class PocAppConfig {
 	
 	/* By default the bean name matches the method Name */
 	@Bean(name="requestValidationErrorsContainer")
-	@Scope("prototype") // new bean on every getBean call
+	@Scope("prototype") // new bean on every getBean call or Autowired
 	public ValidationErrorContainer requestValidationErrorsContainer() {
 		// each request has a ValidationErrorList
 		return new ValidationErrorContainer();
@@ -24,7 +24,7 @@ public class PocAppConfig {
 	 * the same StringBuilder is used over and over. */
 	/* Good use of Memory */
 	@Bean(name="requestStringBuilderContainer")
-	@Scope("prototype") // new bean on every getBean call
+	@Scope("prototype") // new bean on every getBean call or Autowired
 	public StringBuilderContainer requestStringBuilderContainer() {
 		// each request has a StringBuilder
 		return new StringBuilderContainer();
@@ -32,7 +32,7 @@ public class PocAppConfig {
 	
 	/* By default the bean name matches the method Name */
 	@Bean(name="requestStringContainer")
-	@Scope("prototype") // new bean on every getBean call
+	@Scope("prototype") // new bean on every getBean call or Autowired
 	public StringContainer requestStringContainer() {
 		// each request has a StringList
 		return new StringContainer();
@@ -40,7 +40,7 @@ public class PocAppConfig {
 
 	/* By default the bean name matches the method Name */
 	@Bean(name="concurrentRequestLimit")
-	@Scope("singleton")
+	@Scope("singleton") // same bean on every getBean call or Autowired
 	public ConcurrentRequestLimit concurrentRequestLimit() {
 		// each application has a ConcurrentRequestLimit
 		return new ConcurrentRequestLimit();

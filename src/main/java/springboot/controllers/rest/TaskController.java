@@ -22,12 +22,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Parameter;
 //import io.swagger.annotations.ApiImplicitParam;
-import springboot.autowire.helpers.StringBuilderContainer;
 import springboot.autowire.helpers.ValidationErrorContainer;
 import springboot.dto.request.CreateTask;
 import springboot.dto.request.GetById;
 import springboot.dto.request.GetByStatus;
-import springboot.dto.validation.exceptions.DatabaseRowNotFoundException;
 import springboot.dto.validation.exceptions.RequestValidationException;
 import springboot.errorHandling.helpers.ApiValidationError;
 import springboot.services.interfaces.Task;
@@ -54,13 +52,11 @@ public class TaskController
 			consumes = MediaType.APPLICATION_JSON_VALUE,
 			produces = MediaType.APPLICATION_JSON_VALUE
 	)
-	public Mono<ResponseEntity<Object>> createTask(@RequestBody CreateTask data,
-		ServerHttpRequest request,  @Parameter(hidden = true) @Autowired RequestValidationService<CreateTask> createTaskValidation)
-		throws RequestValidationException, DatabaseRowNotFoundException, AccessDeniedException
+	public Mono<ResponseEntity<Object>> createTask(@RequestBody CreateTask data, ServerHttpRequest request, 
+		@Parameter(hidden = true) @Autowired RequestValidationService<CreateTask> createTaskValidation)
+		throws RequestValidationException, AccessDeniedException
 	{
 		
-		StringBuilderContainer requestStringBuilderContainer = 
-			(StringBuilderContainer) this.applicationContext.getBean("requestStringBuilderContainer");
 		ValidationErrorContainer requestValidationErrorsContainer = 
 			(ValidationErrorContainer) this.applicationContext.getBean("requestValidationErrorsContainer");		
 		
@@ -75,7 +71,7 @@ public class TaskController
 		}
 		
 		// 201 response
-		return taskService.buildAndPersistTaskEntity(data, request, requestStringBuilderContainer);
+		return taskService.buildAndPersistTaskEntity(data, request);
 	}
 	
 	// Mono controller method will automatically subscribe()
@@ -86,10 +82,7 @@ public class TaskController
 	public Mono<ResponseEntity<Object>> allTasks(ServerHttpRequest request)
 		throws AccessDeniedException
 	{
-		StringBuilderContainer requestStringBuilderContainer = 
-			(StringBuilderContainer) this.applicationContext.getBean("requestStringBuilderContainer");
-		
-		return taskService.findAll(request, requestStringBuilderContainer);
+		return taskService.findAll(request);
 		
 	}
 	
@@ -98,13 +91,11 @@ public class TaskController
 			path = "/v1/findByTaskStatus/{taskStatus}",
 			produces = MediaType.APPLICATION_JSON_VALUE
 	)
-	public Mono<ResponseEntity<Object>> findByTaskStatus(@PathVariable(required = true) String taskStatus,
-		ServerHttpRequest request, @Parameter(hidden = true) @Autowired RequestValidationService<GetByStatus> getByTaskStatusValidation)
+	public Mono<ResponseEntity<Object>> findByTaskStatus(@PathVariable(required = true) String taskStatus, ServerHttpRequest request,
+		@Parameter(hidden = true) @Autowired RequestValidationService<GetByStatus> getByTaskStatusValidation)
 		throws RequestValidationException, AccessDeniedException
 	{
 		
-		StringBuilderContainer requestStringBuilderContainer = 
-			(StringBuilderContainer) this.applicationContext.getBean("requestStringBuilderContainer");
 		ValidationErrorContainer requestValidationErrorsContainer = 
 				(ValidationErrorContainer) this.applicationContext.getBean("requestValidationErrorsContainer");		
 		
@@ -119,7 +110,7 @@ public class TaskController
 		}
 		
 		
-		return taskService.findByTaskStatus(data.getTaskStatus(), request, requestStringBuilderContainer);
+		return taskService.findByTaskStatus(data.getTaskStatus(), request);
 	}
 	
 	// Mono controller method will automatically subscribe()
@@ -127,13 +118,11 @@ public class TaskController
 			path = "/v1/findByTaskId/{taskId}",
 			produces = MediaType.APPLICATION_JSON_VALUE
 	)
-	public Mono<ResponseEntity<Object>> findByTaskId(@PathVariable(required = true) String taskId,
-		ServerHttpRequest request, @Parameter(hidden = true) @Autowired RequestValidationService<GetById> getByTaskIdValidation)
+	public Mono<ResponseEntity<Object>> findByTaskId(@PathVariable(required = true) String taskId, ServerHttpRequest request,
+		@Parameter(hidden = true) @Autowired RequestValidationService<GetById> getByTaskIdValidation)
 		throws RequestValidationException, AccessDeniedException
 	{
 		
-		StringBuilderContainer requestStringBuilderContainer = 
-			(StringBuilderContainer) this.applicationContext.getBean("requestStringBuilderContainer");
 		ValidationErrorContainer requestValidationErrorsContainer = 
 				(ValidationErrorContainer) this.applicationContext.getBean("requestValidationErrorsContainer");		
 		
@@ -148,7 +137,7 @@ public class TaskController
 		}
 		
 		Long tempLong = Long.valueOf(data.getId());
-		return taskService.findByTaskId(tempLong, request, requestStringBuilderContainer);
+		return taskService.findByTaskId(tempLong, request);
 	}
 	
 }

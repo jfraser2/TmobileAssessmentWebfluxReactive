@@ -4,7 +4,10 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -34,7 +37,7 @@ import springboot.services.interfaces.Task;
 @Service
 public class TaskImpl
     extends ServiceBase
-	implements Task
+	implements Task, ApplicationContextAware
 {
 	
 	private static final String ENTITY_CLASS_NAME = "TaskEntity";
@@ -43,14 +46,21 @@ public class TaskImpl
 	@Autowired
 	private TaskRepository taskRepository;
 	
-	@Autowired
-	private TransactionalOperator transactionalOperator;
-	
-	@Autowired
-	private TransactionalOperator readOnlyTransactionalOperator;	
+	private ApplicationContext applicationContext;
 	
 	@Override
-	public Mono<ResponseEntity<Object>> findByTaskStatus(String taskStatus, ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer) {
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }	
+	
+	@Override
+	public Mono<ResponseEntity<Object>> findByTaskStatus(String taskStatus, ServerHttpRequest request)
+	{
+		
+		StringBuilderContainer requestStringBuilderContainer = 
+				(StringBuilderContainer) this.applicationContext.getBean("requestStringBuilderContainer");
+		TransactionalOperator readOnlyTransactionalOperator = 
+				(TransactionalOperator) this.applicationContext.getBean("readOnlyTransactionalOperator");		
 		
 		// support CORS - createResponseHeader(request);
 		// map is designed for synchronous, one-to-one data transformations
@@ -69,7 +79,13 @@ public class TaskImpl
 	}
 
 	@Override
-	public Mono<ResponseEntity<Object>> findAll(ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer) {
+	public Mono<ResponseEntity<Object>> findAll(ServerHttpRequest request)
+	{
+		
+		StringBuilderContainer requestStringBuilderContainer = 
+				(StringBuilderContainer) this.applicationContext.getBean("requestStringBuilderContainer");
+		TransactionalOperator readOnlyTransactionalOperator = 
+				(TransactionalOperator) this.applicationContext.getBean("readOnlyTransactionalOperator");
 		
 		// support CORS - createResponseHeader(request);
 		// map is designed for synchronous, one-to-one data transformations
@@ -89,10 +105,14 @@ public class TaskImpl
 	
 
 	@Override
-	public Mono<ResponseEntity<Object>> buildAndPersistTaskEntity(CreateTask createTaskRequest, ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer) {
+	public Mono<ResponseEntity<Object>> buildAndPersistTaskEntity(CreateTask createTaskRequest, ServerHttpRequest request)
+	{
+		StringBuilderContainer requestStringBuilderContainer = 
+				(StringBuilderContainer) this.applicationContext.getBean("requestStringBuilderContainer");
+		TransactionalOperator transactionalOperator = 
+				(TransactionalOperator) this.applicationContext.getBean("transactionalOperator");
 		
 		TaskEntity tempEntity = null;
-		// support CORS - createResponseHeader(request);
 		
 		String taskName = createTaskRequest.getTaskName();
 		String taskStatus = createTaskRequest.getTaskStatus();
@@ -107,6 +127,7 @@ public class TaskImpl
 		
 		Mono<TaskEntity> tempMono = Mono.just(tempEntity);
 		
+		// support CORS - createResponseHeader(request);
 		// flatMap is designed for asynchronous, one-to-many transformations
 		// map is designed for synchronous, one-to-one data transformations 
 		
@@ -119,8 +140,14 @@ public class TaskImpl
 
 	
 	@Override
-	public Mono<ResponseEntity<Object>> findByTaskId(Long id, ServerHttpRequest request, StringBuilderContainer requestStringBuilderContainer) {
+	public Mono<ResponseEntity<Object>> findByTaskId(Long id, ServerHttpRequest request)
+	{
+		StringBuilderContainer requestStringBuilderContainer = 
+				(StringBuilderContainer) this.applicationContext.getBean("requestStringBuilderContainer");
+		TransactionalOperator readOnlyTransactionalOperator = 
+				(TransactionalOperator) this.applicationContext.getBean("readOnlyTransactionalOperator");
 		
+		// support CORS - createResponseHeader(request);
 		// map is designed for synchronous, one-to-one data transformations 
 		
 		return taskRepository.findById(id)
