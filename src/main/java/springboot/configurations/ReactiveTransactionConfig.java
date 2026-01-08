@@ -2,6 +2,7 @@ package springboot.configurations;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 import org.springframework.r2dbc.connection.R2dbcTransactionManager;
 import org.springframework.transaction.ReactiveTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -22,6 +23,7 @@ public class ReactiveTransactionConfig {
     }
     
     @Bean
+	@Scope("prototype") // new bean on every getBean call or Autowired
     public TransactionalOperator transactionalOperator(ReactiveTransactionManager reactiveTransactionManager) {
     	System.out.println("Created Transaction Operator Bean");
     	
@@ -29,11 +31,14 @@ public class ReactiveTransactionConfig {
     	definition.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
     	definition.setReadOnly(false);
         definition.setTimeout(30);  // 30 seconds
+        // will join the current Transaction if one exists or start a new one
+        definition.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
         
         return TransactionalOperator.create(reactiveTransactionManager, definition);
     }  
     
     @Bean
+	@Scope("prototype") // new bean on every getBean call or Autowired
     public TransactionalOperator readOnlyTransactionalOperator(ReactiveTransactionManager reactiveTransactionManager) {
     	System.out.println("Created ReadOnly Transaction Operator Bean");
     	
@@ -41,6 +46,8 @@ public class ReactiveTransactionConfig {
     	definition.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
     	definition.setReadOnly(true);
         definition.setTimeout(30);  // 30 seconds
+        // will join the current Transaction if one exists or start a new one
+        definition.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
         
         return TransactionalOperator.create(reactiveTransactionManager, definition);
     }    
