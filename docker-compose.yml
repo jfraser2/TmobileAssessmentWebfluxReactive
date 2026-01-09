@@ -1,0 +1,26 @@
+
+#networks:
+#  nexus_network:
+#    external: true
+
+services:
+
+# ========================================
+# My POC Example  Service
+# ========================================
+  tmobile-webflux-reactive-service:
+    image: tmobile-webflux-reactive-service:1
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+    environment:
+      - JVM_OPTS=-Xms4G -Xmx10G -Dspring.profiles.active=dev
+#    networks:
+#      - nexus_network
+    labels:
+      collect_logs_with_filebeat: "true"
+      decode_log_event_to_json_object: "true"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
