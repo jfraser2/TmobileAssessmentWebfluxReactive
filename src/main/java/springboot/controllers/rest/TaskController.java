@@ -67,7 +67,7 @@ public class TaskController
 		if (errorList.size() > 0)
 		{
 //			System.out.println("createTask - Right before the throw");
-			throw new RequestValidationException(errorList);
+			return Mono.error(new RequestValidationException(errorList));			
 		}
 		
 		// 201 response
@@ -106,7 +106,7 @@ public class TaskController
 		if (errorList.size() > 0)
 		{
 //			System.out.println("findByStatus - Right before the throw passed");
-			throw new RequestValidationException(errorList);			
+			return Mono.error(new RequestValidationException(errorList));			
 		}
 		
 		
@@ -133,7 +133,7 @@ public class TaskController
 		if (errorList.size() > 0)
 		{
 //			System.out.println("findByTaskId - Right before the throw passed");
-			throw new RequestValidationException(errorList);			
+			return Mono.error(new RequestValidationException(errorList));			
 		}
 		
 		Long tempLong = Long.valueOf(data.getId());
