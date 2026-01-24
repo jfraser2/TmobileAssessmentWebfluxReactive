@@ -132,8 +132,14 @@ public class TaskImpl
 		// map is designed for synchronous, one-to-one data transformations 
 		
 		return  tempMono.flatMap(task -> taskRepository.save(task))
-				.<ResponseEntity<Object>>map(savedEntity ->
-				    { return ResponseEntity.status(HttpStatus.CREATED).headers(createResponseHeader(request)).body(goodResponse(savedEntity, requestStringBuilderContainer, null));
+				.<ResponseEntity<Object>>map(savedEntity -> {
+					// In the future write entityToJson to a Kafka queue.
+					// Another process(maybe mulesoft) can read the queue and store the json,
+					// in an Iceberg table living in AWS S3.
+					// The S3 bucket will store the json, using the OLAP data lake format parquet.
+					// Then snowflake can use it.
+					String entityToJson = goodResponse(savedEntity, requestStringBuilderContainer, null);
+				    return ResponseEntity.status(HttpStatus.CREATED).headers(createResponseHeader(request)).body(entityToJson);
 				})
 				.as(transactionalOperator::transactional); // Wrap the operations in a transaction
 	}
