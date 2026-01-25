@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Scope;
 
 import springboot.autowire.helpers.ConcurrentRequestLimit;
 import springboot.autowire.helpers.StringBuilderContainer;
-import springboot.autowire.helpers.StringContainer;
+import springboot.autowire.helpers.StringListContainer;
 import springboot.autowire.helpers.ValidationErrorContainer;
 
 @Configuration
@@ -31,11 +31,11 @@ public class PocAppConfig {
 	}
 	
 	/* By default the bean name matches the method Name */
-	@Bean(name="requestStringContainer")
+	@Bean(name="requestStringListContainer")
 	@Scope("prototype") // new bean on every getBean call or Autowired
-	public StringContainer requestStringContainer() {
+	public StringListContainer requestStringListContainer() {
 		// each request has a StringList
-		return new StringContainer();
+		return new StringListContainer();
 	}
 
 	/* By default the bean name matches the method Name */

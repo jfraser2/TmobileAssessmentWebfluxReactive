@@ -18,6 +18,7 @@ public class OpenApiConfig
 	
 	private static final String lineSeparator = System.getProperties().getProperty("line.separator");
 	
+	/* By default the bean name matches the method Name */
     @Bean
     public OpenAPI myOpenAPI() {
     	
