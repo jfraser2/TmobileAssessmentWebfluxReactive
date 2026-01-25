@@ -49,7 +49,7 @@ public class TaskController
 	{
 		
 		ValidationErrorContainer requestValidationErrorsContainer = 
-			(ValidationErrorContainer) getBean("requestValidationErrorsContainer");		
+			(ValidationErrorContainer) getBean(VALIDATION_ERRORS_CONTAINER);		
 		
 		// single field validation
 		createTaskValidation.validateRequest(data, requestValidationErrorsContainer, null);
@@ -88,7 +88,7 @@ public class TaskController
 	{
 		
 		ValidationErrorContainer requestValidationErrorsContainer = 
-				(ValidationErrorContainer) getBean("requestValidationErrorsContainer");		
+				(ValidationErrorContainer) getBean(VALIDATION_ERRORS_CONTAINER);		
 		
 		GetByStatus data = new GetByStatus(URLDecoder.decode(taskStatus, StandardCharsets.UTF_8));
 		getByTaskStatusValidation.validateRequest(data, requestValidationErrorsContainer, null);
@@ -115,7 +115,7 @@ public class TaskController
 	{
 		
 		ValidationErrorContainer requestValidationErrorsContainer = 
-				(ValidationErrorContainer) getBean("requestValidationErrorsContainer");		
+				(ValidationErrorContainer) getBean(VALIDATION_ERRORS_CONTAINER);		
 		
 		GetById data = new GetById(URLDecoder.decode(taskId, StandardCharsets.UTF_8));
 		getByTaskIdValidation.validateRequest(data, requestValidationErrorsContainer, null);

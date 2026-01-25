@@ -48,9 +48,9 @@ public class TaskImpl
 	{
 		
 		StringBuilderContainer requestStringBuilderContainer = 
-				(StringBuilderContainer) getBean("requestStringBuilderContainer");
+				(StringBuilderContainer) getBean(STRING_BUILDER_CONTAINER);
 		TransactionalOperator readOnlyTransactionalOperator = 
-				(TransactionalOperator) getBean("readOnlyTransactionalOperator");		
+				(TransactionalOperator) getBean(READ_ONLY_TRANSACTIONAL_OPERATOR);		
 		
 		// support CORS - createResponseHeader(request);
 		// map is designed for synchronous, one-to-one data transformations
@@ -73,9 +73,9 @@ public class TaskImpl
 	{
 		
 		StringBuilderContainer requestStringBuilderContainer = 
-				(StringBuilderContainer) getBean("requestStringBuilderContainer");
+				(StringBuilderContainer) getBean(STRING_BUILDER_CONTAINER);
 		TransactionalOperator readOnlyTransactionalOperator = 
-				(TransactionalOperator) getBean("readOnlyTransactionalOperator");
+				(TransactionalOperator) getBean(READ_ONLY_TRANSACTIONAL_OPERATOR);
 		
 		// support CORS - createResponseHeader(request);
 		// map is designed for synchronous, one-to-one data transformations
@@ -98,9 +98,9 @@ public class TaskImpl
 	public Mono<ResponseEntity<Object>> buildAndPersistTaskEntity(CreateTask createTaskRequest, ServerHttpRequest request)
 	{
 		StringBuilderContainer requestStringBuilderContainer = 
-				(StringBuilderContainer) getBean("requestStringBuilderContainer");
+				(StringBuilderContainer) getBean(STRING_BUILDER_CONTAINER);
 		TransactionalOperator transactionalOperator = 
-				(TransactionalOperator) getBean("transactionalOperator");
+				(TransactionalOperator) getBean(TRANSACTIONAL_OPERATOR);
 		
 		TaskEntity tempEntity = null;
 		
@@ -139,9 +139,9 @@ public class TaskImpl
 	public Mono<ResponseEntity<Object>> findByTaskId(Long id, ServerHttpRequest request)
 	{
 		StringBuilderContainer requestStringBuilderContainer = 
-				(StringBuilderContainer) getBean("requestStringBuilderContainer");
+				(StringBuilderContainer) getBean(STRING_BUILDER_CONTAINER);
 		TransactionalOperator readOnlyTransactionalOperator = 
-				(TransactionalOperator) getBean("readOnlyTransactionalOperator");
+				(TransactionalOperator) getBean(READ_ONLY_TRANSACTIONAL_OPERATOR);
 		
 		// support CORS - createResponseHeader(request);
 		// map is designed for synchronous, one-to-one data transformations 
