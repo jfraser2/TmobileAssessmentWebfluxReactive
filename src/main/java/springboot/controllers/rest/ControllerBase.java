@@ -8,6 +8,8 @@ public abstract class ControllerBase
 	implements ApplicationContextAware
 {
 	
+	protected static final String VALIDATION_ERRORS_CONTAINER = "requestValidationErrorsContainer";
+	
 	private ApplicationContext applicationContext;
 
 	@Override

@@ -36,6 +36,10 @@ public abstract class ServiceBase
 	protected static final String GODD_RESPONSE_SUFFIX = "}";
 	protected static final String JSON_FIELD_SEPARATOR = ",";
 	
+	protected static final String STRING_BUILDER_CONTAINER = "requestStringBuilderContainer";
+	protected static final String READ_ONLY_TRANSACTIONAL_OPERATOR = "readOnlyTransactionalOperator";
+	protected static final String TRANSACTIONAL_OPERATOR = "transactionalOperator";
+	
 	private ApplicationContext applicationContext;
 
 	@Override
