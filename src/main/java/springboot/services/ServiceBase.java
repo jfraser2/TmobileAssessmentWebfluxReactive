@@ -4,6 +4,9 @@ import java.lang.reflect.Method;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 
@@ -23,13 +26,26 @@ import springboot.enums.GsonEnum;
 import springboot.enums.MapperEnum;
 import springboot.errorHandling.helpers.ZonedDateTimeAdapter;
 
-public abstract class ServiceBase {
+public abstract class ServiceBase
+	implements ApplicationContextAware
+{
 
 	protected static final String EOL = System.getProperty("line.separator");
 	protected static final String INDENT = "  ";
 
 	protected static final String GODD_RESPONSE_SUFFIX = "}";
 	protected static final String JSON_FIELD_SEPARATOR = ",";
+	
+	private ApplicationContext applicationContext;
+
+	@Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }	
+
+	protected Object getBean(String beanName) {
+		return applicationContext.getBean(beanName);
+	}
 	
 	private String generateGoodResponsePrefix(Object databaseEntityObject) {
 		
