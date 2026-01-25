@@ -5,11 +5,11 @@ import java.util.List;
 
 import jakarta.annotation.PreDestroy;
 
-public class StringContainer {
+public class StringListContainer {
 	
 	private List<String> stringList;
 	
-	public StringContainer()
+	public StringListContainer()
 	{
 		this.stringList = new ArrayList<String>();
 	}

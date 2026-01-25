@@ -16,12 +16,14 @@ import io.r2dbc.spi.ConnectionFactory;
 @EnableTransactionManagement
 public class ReactiveTransactionConfig {
 
+	/* By default the bean name matches the method Name */
     @Bean
     ReactiveTransactionManager transactionManager( ConnectionFactory connectionFactory ) {
     	System.out.println("Enabled the Reactive Transaction Manager");
         return new R2dbcTransactionManager( connectionFactory );
     }
     
+	/* By default the bean name matches the method Name */
     @Bean
 	@Scope("prototype") // new bean on every getBean call or Autowired
     public TransactionalOperator transactionalOperator(ReactiveTransactionManager reactiveTransactionManager) {
@@ -37,6 +39,7 @@ public class ReactiveTransactionConfig {
         return TransactionalOperator.create(reactiveTransactionManager, definition);
     }  
     
+	/* By default the bean name matches the method Name */
     @Bean
 	@Scope("prototype") // new bean on every getBean call or Autowired
     public TransactionalOperator readOnlyTransactionalOperator(ReactiveTransactionManager reactiveTransactionManager) {

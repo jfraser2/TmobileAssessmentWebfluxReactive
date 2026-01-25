@@ -24,6 +24,7 @@ public class R2dbcWithPoolConfig {
     @Autowired
     Environment env;
     
+	/* By default the bean name matches the method Name */
     @Bean
     public ConnectionFactory connectionFactory( ) {
     	// example: r2dbc:h2:mem:///testdb?options=DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
