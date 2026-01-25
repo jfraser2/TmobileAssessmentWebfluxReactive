@@ -7,10 +7,7 @@ import java.util.List;
 
 import reactor.core.publisher.Mono;
 
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -34,17 +31,11 @@ import springboot.services.validation.request.RequestValidationService;
 @RestController
 @RequestMapping(path="/rest/api")
 public class TaskController
-	implements ApplicationContextAware 
+	extends ControllerBase
 {
-	private ApplicationContext applicationContext;
 	
 	@Autowired
 	private Task taskService;
-	
-	@Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
-    }
 	
 	// Mono controller method will automatically subscribe()
 	@RequestMapping(method = {RequestMethod.POST},
@@ -58,7 +49,7 @@ public class TaskController
 	{
 		
 		ValidationErrorContainer requestValidationErrorsContainer = 
-			(ValidationErrorContainer) this.applicationContext.getBean("requestValidationErrorsContainer");		
+			(ValidationErrorContainer) getBean("requestValidationErrorsContainer");		
 		
 		// single field validation
 		createTaskValidation.validateRequest(data, requestValidationErrorsContainer, null);
@@ -97,7 +88,7 @@ public class TaskController
 	{
 		
 		ValidationErrorContainer requestValidationErrorsContainer = 
-				(ValidationErrorContainer) this.applicationContext.getBean("requestValidationErrorsContainer");		
+				(ValidationErrorContainer) getBean("requestValidationErrorsContainer");		
 		
 		GetByStatus data = new GetByStatus(URLDecoder.decode(taskStatus, StandardCharsets.UTF_8));
 		getByTaskStatusValidation.validateRequest(data, requestValidationErrorsContainer, null);
@@ -124,7 +115,7 @@ public class TaskController
 	{
 		
 		ValidationErrorContainer requestValidationErrorsContainer = 
-				(ValidationErrorContainer) this.applicationContext.getBean("requestValidationErrorsContainer");		
+				(ValidationErrorContainer) getBean("requestValidationErrorsContainer");		
 		
 		GetById data = new GetById(URLDecoder.decode(taskId, StandardCharsets.UTF_8));
 		getByTaskIdValidation.validateRequest(data, requestValidationErrorsContainer, null);

@@ -4,10 +4,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
@@ -37,7 +34,7 @@ import springboot.services.interfaces.Task;
 @Service
 public class TaskImpl
     extends ServiceBase
-	implements Task, ApplicationContextAware
+	implements Task
 {
 	
 	private static final String ENTITY_CLASS_NAME = "TaskEntity";
@@ -46,21 +43,14 @@ public class TaskImpl
 	@Autowired
 	private TaskRepository taskRepository;
 	
-	private ApplicationContext applicationContext;
-	
-	@Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
-    }	
-	
 	@Override
 	public Mono<ResponseEntity<Object>> findByTaskStatus(String taskStatus, ServerHttpRequest request)
 	{
 		
 		StringBuilderContainer requestStringBuilderContainer = 
-				(StringBuilderContainer) this.applicationContext.getBean("requestStringBuilderContainer");
+				(StringBuilderContainer) getBean("requestStringBuilderContainer");
 		TransactionalOperator readOnlyTransactionalOperator = 
-				(TransactionalOperator) this.applicationContext.getBean("readOnlyTransactionalOperator");		
+				(TransactionalOperator) getBean("readOnlyTransactionalOperator");		
 		
 		// support CORS - createResponseHeader(request);
 		// map is designed for synchronous, one-to-one data transformations
@@ -83,9 +73,9 @@ public class TaskImpl
 	{
 		
 		StringBuilderContainer requestStringBuilderContainer = 
-				(StringBuilderContainer) this.applicationContext.getBean("requestStringBuilderContainer");
+				(StringBuilderContainer) getBean("requestStringBuilderContainer");
 		TransactionalOperator readOnlyTransactionalOperator = 
-				(TransactionalOperator) this.applicationContext.getBean("readOnlyTransactionalOperator");
+				(TransactionalOperator) getBean("readOnlyTransactionalOperator");
 		
 		// support CORS - createResponseHeader(request);
 		// map is designed for synchronous, one-to-one data transformations
@@ -108,9 +98,9 @@ public class TaskImpl
 	public Mono<ResponseEntity<Object>> buildAndPersistTaskEntity(CreateTask createTaskRequest, ServerHttpRequest request)
 	{
 		StringBuilderContainer requestStringBuilderContainer = 
-				(StringBuilderContainer) this.applicationContext.getBean("requestStringBuilderContainer");
+				(StringBuilderContainer) getBean("requestStringBuilderContainer");
 		TransactionalOperator transactionalOperator = 
-				(TransactionalOperator) this.applicationContext.getBean("transactionalOperator");
+				(TransactionalOperator) getBean("transactionalOperator");
 		
 		TaskEntity tempEntity = null;
 		
@@ -149,9 +139,9 @@ public class TaskImpl
 	public Mono<ResponseEntity<Object>> findByTaskId(Long id, ServerHttpRequest request)
 	{
 		StringBuilderContainer requestStringBuilderContainer = 
-				(StringBuilderContainer) this.applicationContext.getBean("requestStringBuilderContainer");
+				(StringBuilderContainer) getBean("requestStringBuilderContainer");
 		TransactionalOperator readOnlyTransactionalOperator = 
-				(TransactionalOperator) this.applicationContext.getBean("readOnlyTransactionalOperator");
+				(TransactionalOperator) getBean("readOnlyTransactionalOperator");
 		
 		// support CORS - createResponseHeader(request);
 		// map is designed for synchronous, one-to-one data transformations 
