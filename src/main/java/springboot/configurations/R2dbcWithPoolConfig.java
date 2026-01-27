@@ -39,7 +39,7 @@ public class R2dbcWithPoolConfig {
         );
 
     	String envValue = env.getProperty("spring.r2dbc.pool.enabled");
-    	System.out.println("Before The H2 Connection Pool Test: " + envValue);
+    	System.out.println("The Auto Configure H2 Connection Pool is: " + envValue);
     	
     	Boolean testPoolEnabled = true;
     	if (null != envValue) {
@@ -47,7 +47,7 @@ public class R2dbcWithPoolConfig {
     	}
     	
         if (!testPoolEnabled) {
-        	System.out.println("created The H2 Connection Pool");
+        	System.out.println("Created The H2 Connection Pool");
             ConnectionPoolConfiguration connectionPoolConfiguration = ConnectionPoolConfiguration.builder( connectionFactory )
                     .maxIdleTime( Duration.ofSeconds( env.getProperty( "spring.r2dbc.pool.max-idle-time", Long.class, 600L ) ) ) // 10 Minutes
                     .maxAcquireTime( Duration.ofSeconds( env.getProperty( "spring.r2dbc.pool.max-acquire-time", Long.class, 5L ) ) ) // 5 seconds
