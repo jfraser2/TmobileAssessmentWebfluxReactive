@@ -43,6 +43,7 @@ public class PocAppConfig {
 	@Scope("singleton") // same bean on every getBean call or Autowired
 	public ConcurrentRequestLimit concurrentRequestLimit() {
 		// each application has a ConcurrentRequestLimit
+    	System.out.println("Started the Concurrent Request Counter");
 		return new ConcurrentRequestLimit();
 	}
 	
