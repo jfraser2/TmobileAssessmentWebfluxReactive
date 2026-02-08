@@ -16,6 +16,8 @@ import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Mono;
 import springboot.autowire.helpers.StringBuilderContainer;
 import springboot.dto.request.CreateTask;
+import springboot.dto.request.UpdateTaskStatus;
+
 import springboot.dto.validation.exceptions.DatabaseRowNotFoundException;
 import springboot.entities.TaskEntity;
 import springboot.enums.ZonedDateTimeEnum;
@@ -154,18 +156,35 @@ public class TaskImpl
 				.as(readOnlyTransactionalOperator::transactional); // Wrap the operations in a transaction
 	}
 	
-/*
-    public Mono<User> updateUserNameInTransaction(Long id, String newName) {
+	@Override
+	public Mono<ResponseEntity<Object>> updateTaskStatus(UpdateTaskStatus updateTaskStatus, ServerHttpRequest request) {
         // The entire chain within the .as(operator::transactional) block runs in a single transaction
-        return userRepository.findById(id)
-            .switchIfEmpty(Mono.error(new RuntimeException("User not found")))
-            .flatMap(user -> {
-                user.setName(newName);
+		StringBuilderContainer requestStringBuilderContainer = 
+				(StringBuilderContainer) getBean(STRING_BUILDER_CONTAINER);
+		TransactionalOperator transactionalOperator = 
+				(TransactionalOperator) getBean(TRANSACTIONAL_OPERATOR);
+		
+		// support CORS - createResponseHeader(request);
+		// flatMap is designed for asynchronous, one-to-many transformations
+		// map is designed for synchronous, one-to-one data transformations 
+    	
+        return taskRepository.findById(updateTaskStatus.getId())
+            .switchIfEmpty(Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(NOT_FOUND_TABLE_NAME, updateTaskStatus.getId()))))
+            .<TaskEntity>map(task -> {
+        	    ZonedDateTime zonedDateTime = ZonedDateTimeEnum.INSTANCE.now();
+        		task.setTaskLastUpdateDate(zonedDateTime);
+                task.setTaskStatus(updateTaskStatus.getNewTaskStatus());
+                return task;
+            })
+            .flatMap(updatedTask -> taskRepository.save(updatedTask))
+            .<ResponseEntity<Object>>map(savedEntity -> {
+                
                 // Additional operations can be chained here, e.g., saving related entities
-                return userRepository.save(user);
+               	String entityToJson = goodResponse(savedEntity, requestStringBuilderContainer, null);
+               	return ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(entityToJson);
             })
             .as(transactionalOperator::transactional); // Wrap the operations in a transaction
     }
-*/    
+    
     
 }

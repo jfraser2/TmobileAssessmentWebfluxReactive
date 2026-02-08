@@ -23,6 +23,7 @@ import springboot.autowire.helpers.ValidationErrorContainer;
 import springboot.dto.request.CreateTask;
 import springboot.dto.request.GetById;
 import springboot.dto.request.GetByStatus;
+import springboot.dto.request.UpdateTaskStatus;
 import springboot.dto.validation.exceptions.RequestValidationException;
 import springboot.errorHandling.helpers.ApiValidationError;
 import springboot.services.interfaces.Task;
@@ -129,6 +130,34 @@ public class TaskController
 		
 		Long tempLong = Long.valueOf(data.getId());
 		return taskService.findByTaskId(tempLong, request);
+	}
+	
+	// Mono controller method will automatically subscribe()
+	@RequestMapping(method = {RequestMethod.PATCH},
+			path = "/v1/updateTaskStatus",
+			consumes = MediaType.APPLICATION_JSON_VALUE,
+			produces = MediaType.APPLICATION_JSON_VALUE
+	)
+	public Mono<ResponseEntity<Object>> updateTaskStatus(@RequestBody UpdateTaskStatus data, ServerHttpRequest request, 
+		@Parameter(hidden = true) @Autowired RequestValidationService<UpdateTaskStatus> updateTaskStatusValidation)
+		throws RequestValidationException, AccessDeniedException
+	{
+		
+		ValidationErrorContainer requestValidationErrorsContainer = 
+			(ValidationErrorContainer) getBean(VALIDATION_ERRORS_CONTAINER);		
+		
+		// single field validation
+		updateTaskStatusValidation.validateRequest(data, requestValidationErrorsContainer, null);
+		List<ApiValidationError> errorList = requestValidationErrorsContainer.getValidationErrorList();
+		
+		if (errorList.size() > 0)
+		{
+//			System.out.println("createTask - Right before the throw");
+			return Mono.error(new RequestValidationException(errorList));			
+		}
+		
+		// 201 response
+		return taskService.updateTaskStatus(data, request);
 	}
 	
 }
