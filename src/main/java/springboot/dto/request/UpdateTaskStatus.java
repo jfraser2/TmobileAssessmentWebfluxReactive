@@ -2,11 +2,13 @@ package springboot.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 public class UpdateTaskStatus {
 
 	@NotNull(message = "Id must not be null")
+	@Positive(message = "The value must be greater than 0")
 	private Long id;
 	
 	@NotBlank(message = "New Task status must not be blank")
