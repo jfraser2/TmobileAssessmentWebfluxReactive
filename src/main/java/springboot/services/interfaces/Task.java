@@ -17,5 +17,6 @@ public interface Task {
 	public Mono<ResponseEntity<Object>> findByTaskId(Long id, ServerHttpRequest request);
 
 	public Mono<ResponseEntity<Object>> updateTaskStatus(UpdateTaskStatus updateTaskStatus, ServerHttpRequest request);
+	public Mono<ResponseEntity<Object>> deleteTask(Long taskId, ServerHttpRequest request);
 	
 }

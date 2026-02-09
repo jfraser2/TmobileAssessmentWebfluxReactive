@@ -37,6 +37,8 @@ public abstract class ServiceBase
 	protected static final String JSON_FIELD_SEPARATOR = ",";
 	
 	protected static final String STRING_BUILDER_CONTAINER = "requestStringBuilderContainer";
+	protected static final String ROW_DELETE_BEAN = "requestRowDelete";
+	
 	protected static final String READ_ONLY_TRANSACTIONAL_OPERATOR = "readOnlyTransactionalOperator";
 	protected static final String TRANSACTIONAL_OPERATOR = "transactionalOperator";
 	
@@ -317,6 +319,10 @@ public abstract class ServiceBase
 	
 	protected String buildNoDatabaseRowMessage(String tableName, Long rowId) {
 		return "The " + tableName + " for Id: " + rowId + " does not exist.";
+	}
+	
+	protected String buildRowDeleteMessage(String tableName, Long rowId) {
+		return "The " + tableName + " for Id: " + rowId + " was deleted.";
 	}
 	
 }
