@@ -170,13 +170,12 @@ public class TaskImpl
     	
         return taskRepository.findById(updateTaskStatus.getId())
             .switchIfEmpty(Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(NOT_FOUND_TABLE_NAME, updateTaskStatus.getId()))))
-            .<TaskEntity>map(task -> {
+            .flatMap(fetchedTask -> {
         	    ZonedDateTime zonedDateTime = ZonedDateTimeEnum.INSTANCE.now();
-        		task.setTaskLastUpdateDate(zonedDateTime);
-                task.setTaskStatus(updateTaskStatus.getNewTaskStatus());
-                return task;
+        		fetchedTask.setTaskLastUpdateDate(zonedDateTime);
+                fetchedTask.setTaskStatus(updateTaskStatus.getNewTaskStatus());
+                return taskRepository.save(fetchedTask);                
             })
-            .flatMap(updatedTask -> taskRepository.save(updatedTask))
             .<ResponseEntity<Object>>map(savedEntity -> {
                 
                 // Additional operations can be chained here, e.g., saving related entities
