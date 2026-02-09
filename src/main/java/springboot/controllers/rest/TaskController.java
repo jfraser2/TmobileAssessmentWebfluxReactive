@@ -160,4 +160,31 @@ public class TaskController
 		return taskService.updateTaskStatus(data, request);
 	}
 	
+	// Mono controller method will automatically subscribe()
+	@RequestMapping(method = {RequestMethod.DELETE},
+			path = "/v1/deleteTask/{taskId}",
+			produces = MediaType.APPLICATION_JSON_VALUE
+	)
+	public Mono<ResponseEntity<Object>> deleteTask(@PathVariable(required = true) String taskId, ServerHttpRequest request,
+		@Parameter(hidden = true) @Autowired RequestValidationService<GetById> getByTaskIdValidation)
+		throws RequestValidationException, AccessDeniedException
+	{
+		
+		ValidationErrorContainer requestValidationErrorsContainer = 
+				(ValidationErrorContainer) getBean(VALIDATION_ERRORS_CONTAINER);		
+		
+		GetById data = new GetById(URLDecoder.decode(taskId, StandardCharsets.UTF_8));
+		getByTaskIdValidation.validateRequest(data, requestValidationErrorsContainer, null);
+		List<ApiValidationError> errorList = requestValidationErrorsContainer.getValidationErrorList();
+		
+		if (errorList.size() > 0)
+		{
+//			System.out.println("findByTaskId - Right before the throw passed");
+			return Mono.error(new RequestValidationException(errorList));			
+		}
+		
+		Long tempLong = Long.valueOf(data.getId());
+		return taskService.deleteTask(tempLong, request);
+	}
+	
 }

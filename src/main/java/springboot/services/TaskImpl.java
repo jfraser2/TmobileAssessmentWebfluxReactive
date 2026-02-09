@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.reactive.TransactionalOperator;
 
 import reactor.core.publisher.Mono;
+import springboot.autowire.helpers.RowDelete;
 import springboot.autowire.helpers.StringBuilderContainer;
 import springboot.dto.request.CreateTask;
 import springboot.dto.request.UpdateTaskStatus;
@@ -185,5 +186,36 @@ public class TaskImpl
             .as(transactionalOperator::transactional); // Wrap the operations in a transaction
     }
     
+	@Override
+	public Mono<ResponseEntity<Object>> deleteTask(Long taskId, ServerHttpRequest request) {
+        // The entire chain within the .as(operator::transactional) block runs in a single transaction
+		StringBuilderContainer requestStringBuilderContainer = 
+				(StringBuilderContainer) getBean(STRING_BUILDER_CONTAINER);
+		RowDelete rowDelete = (RowDelete) getBean(ROW_DELETE_BEAN);
+		TransactionalOperator transactionalOperator = 
+				(TransactionalOperator) getBean(TRANSACTIONAL_OPERATOR);
+		
+    	rowDelete.setTimestamp(ZonedDateTimeEnum.INSTANCE.now());
+    	String message = buildRowDeleteMessage(NOT_FOUND_TABLE_NAME, taskId);
+    	rowDelete.setMessage(message);
+    	
+		// support CORS - createResponseHeader(request);
+		// flatMap is designed for asynchronous, one-to-many transformations
+		// map is designed for synchronous, one-to-one data transformations 
+    	
+        return taskRepository.findById(taskId)
+            .switchIfEmpty(Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(NOT_FOUND_TABLE_NAME, taskId))))
+            .flatMap(fetchedTask -> taskRepository.delete(fetchedTask)
+            		.then(Mono.just(fetchedTask)) // 3. Return a Mono of the original object            		
+            )
+            .<ResponseEntity<Object>>map(fetchedEntity -> {
+            	
+               	String entityToJson = goodResponse(rowDelete, requestStringBuilderContainer, null);
+                
+                // Additional operations can be chained here, e.g., saving related entities
+               	return ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(entityToJson);
+            })
+            .as(transactionalOperator::transactional); // Wrap the operations in a transaction
+    }
     
 }

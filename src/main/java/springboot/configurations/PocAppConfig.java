@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
 import springboot.autowire.helpers.ConcurrentRequestLimit;
+import springboot.autowire.helpers.RowDelete;
 import springboot.autowire.helpers.StringBuilderContainer;
 import springboot.autowire.helpers.StringListContainer;
 import springboot.autowire.helpers.ValidationErrorContainer;
@@ -36,6 +37,14 @@ public class PocAppConfig {
 	public StringListContainer requestStringListContainer() {
 		// each request has a StringList
 		return new StringListContainer();
+	}
+	
+	/* By default the bean name matches the method Name */
+	@Bean(name="requestRowDelete")
+	@Scope("prototype") // new bean on every getBean call or Autowired
+	public RowDelete requestRowDelete() {
+		// each request can have a row delete response
+		return new RowDelete();
 	}
 
 	/* By default the bean name matches the method Name */
