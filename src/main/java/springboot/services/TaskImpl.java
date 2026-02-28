@@ -128,25 +128,28 @@ public class TaskImpl
 				
 				 return taskRepository.save(task)
 					.<ResponseEntity<Object>>flatMap(savedEntity -> {
-			        	// In the future write entityToJson to a Kafka or RabbitMQ.
+			        	// In the future write entityToJson to Kafka or RabbitMQ.
 						// Another process(maybe mulesoft) can read the queue and store the json,
 						// in an Iceberg table living in AWS S3.
 						// The S3 bucket will store the json, using the OLAP data lake format parquet.
 						// Then snowflake can use it.
 						QueueResult result = new QueueResult(savedEntity, false);
 			            	
-						result.setResult(true);
-						System.out.println("Queue Insert Processed!!!");
+						String errorJson = null;
+						if (!status.isRollbackOnly()) { // check if the database insert worked
+							result.setResult(true);
+						} else { // build error Json
+							errorJson = buildDatabaseOrQueueingError("A database insert failed.");
+						}
 						
-						
+						System.out.println("Queueing Processed: " + result.getResult());
 						
 						if (result.getResult()) {
 							String entityToJson = goodResponse(savedEntity, requestStringBuilderContainer, null);
 						    return Mono.just(ResponseEntity.status(HttpStatus.CREATED).headers(createResponseHeader(request)).body(entityToJson));
 						} else {
 							status.setRollbackOnly(); // Mark for rollback
-							System.out.println("Rollback triggered due to Queue Insert Failed");
-						    return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).headers(createResponseHeader(request)).body("dummy place holder"));
+						    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
 						}
 					}); 	// end the Map
 		    
