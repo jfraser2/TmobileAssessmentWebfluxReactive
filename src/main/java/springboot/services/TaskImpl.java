@@ -22,7 +22,7 @@ import springboot.autowire.helpers.StringBuilderContainer;
 import springboot.dto.processing.QueueResult;
 import springboot.dto.request.CreateTask;
 import springboot.dto.request.UpdateTaskStatus;
-
+import springboot.dto.response.NonModelAdditionalFields;
 import springboot.dto.validation.exceptions.DatabaseRowNotFoundException;
 import springboot.entities.TaskEntity;
 import springboot.enums.ZonedDateTimeEnum;
@@ -106,7 +106,6 @@ public class TaskImpl
 			TransactionalOperator transactionalOperator,
 			StringBuilderContainer requestStringBuilderContainer)
 	{
-		// execute method only returns a flux
 		Publisher<ResponseEntity<Object>> tempPublisher = 
 				transactionalOperator.execute(new TransactionCallback<ResponseEntity<Object>>() {  // Wrap the operations in a transaction
 //			transactionalOperator.execute(new TransactionCallback<>() {  // Wrap the operations in a transaction
@@ -137,6 +136,10 @@ public class TaskImpl
 			            	
 						String errorJson = null;
 						if (!status.isRollbackOnly()) { // check if the database insert worked
+							NonModelAdditionalFields additionalFields = new NonModelAdditionalFields();
+							additionalFields.setSource("WebApp");
+							additionalFields.setOperation("Create");
+							String queueJson = goodResponse(savedEntity, requestStringBuilderContainer, additionalFields);
 							result.setResult(true);
 						} else { // build error Json
 							errorJson = buildDatabaseOrQueueingError("A database insert failed.");
