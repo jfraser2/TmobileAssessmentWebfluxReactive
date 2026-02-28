@@ -8,6 +8,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -24,6 +25,7 @@ import springboot.dto.response.NonModelAdditionalFields;
 import springboot.dto.response.ResultStatus;
 import springboot.enums.GsonEnum;
 import springboot.enums.MapperEnum;
+import springboot.errorHandling.helpers.ApiError;
 import springboot.errorHandling.helpers.ZonedDateTimeAdapter;
 
 public abstract class ServiceBase
@@ -41,6 +43,8 @@ public abstract class ServiceBase
 	
 	protected static final String READ_ONLY_TRANSACTIONAL_OPERATOR = "readOnlyTransactionalOperator";
 	protected static final String TRANSACTIONAL_OPERATOR = "transactionalOperator";
+	
+	protected static final String UNEXPECTED_PROCESSING_ERROR = "{\"message\": \"Object could not convert to json\"}";
 	
 	private ApplicationContext applicationContext;
 
@@ -323,6 +327,29 @@ public abstract class ServiceBase
 	
 	protected String buildRowDeleteMessage(String tableName, Long rowId) {
 		return "The " + tableName + " for Id: " + rowId + " was deleted.";
+	}
+	
+	protected String buildDatabaseOrQueueingError(String message) {
+		ApiError apiError = new ApiError();
+		apiError.setRequestStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+        apiError.setMessage(message);
+        
+		String json = null;
+		try {
+			ObjectMapper mapper = MapperEnum.INSTANCE.getObjectMapper();				
+			
+			ObjectWriter ow = mapper.writer().withDefaultPrettyPrinter();
+			json = ow.writeValueAsString(apiError);
+		}
+		catch(JsonProcessingException jpe)
+		{
+			json = UNEXPECTED_PROCESSING_ERROR;
+		}
+		
+		apiError = null;
+		
+		return json;
+		
 	}
 	
 }
