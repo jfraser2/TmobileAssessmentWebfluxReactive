@@ -20,7 +20,9 @@ public class ReactiveTransactionConfig {
     @Bean
     ReactiveTransactionManager transactionManager( ConnectionFactory connectionFactory ) {
     	System.out.println("Enabled the Reactive Transaction Manager");
-        return new R2dbcTransactionManager( connectionFactory );
+    	R2dbcTransactionManager aManager =  new R2dbcTransactionManager( connectionFactory );
+    	aManager.setEnforceReadOnly(false);
+        return aManager;
     }
     
 	/* By default the bean name matches the method Name */
@@ -31,12 +33,14 @@ public class ReactiveTransactionConfig {
     	
     	DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
     	definition.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
-    	definition.setReadOnly(false);
+    	definition.setReadOnly(false); // H2 does not support true or false
         definition.setTimeout(30);  // 30 seconds
         // will join the current Transaction if one exists or start a new one
         definition.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
         
         return TransactionalOperator.create(reactiveTransactionManager, definition);
+//        return TransactionalOperator.create(reactiveTransactionManager);
+        
     }  
     
 	/* By default the bean name matches the method Name */
@@ -47,12 +51,13 @@ public class ReactiveTransactionConfig {
     	
     	DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
     	definition.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
-    	definition.setReadOnly(true);
+    	definition.setReadOnly(false); // H2 does not support true or false
         definition.setTimeout(30);  // 30 seconds
         // will join the current Transaction if one exists or start a new one
         definition.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
         
         return TransactionalOperator.create(reactiveTransactionManager, definition);
+//        return TransactionalOperator.create(reactiveTransactionManager);
     }    
     
     
