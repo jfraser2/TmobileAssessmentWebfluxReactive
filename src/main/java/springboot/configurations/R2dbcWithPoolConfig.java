@@ -9,11 +9,9 @@ import org.springframework.core.env.Environment;
 import org.springframework.data.r2dbc.config.EnableR2dbcAuditing;
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
 
-import io.r2dbc.h2.H2ConnectionConfiguration;
-import io.r2dbc.h2.H2ConnectionFactory;
-
 import io.r2dbc.pool.ConnectionPool;
 import io.r2dbc.pool.ConnectionPoolConfiguration;
+import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 
 @Configuration
@@ -28,16 +26,29 @@ public class R2dbcWithPoolConfig {
     @Bean
     public ConnectionFactory connectionFactory( ) {
     	// example: r2dbc:h2:mem:///testdb?options=DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    	// DB_CLOSE_DELAY Keeps DB alive until the virtual machine shuts down or all connections are closed    	
+    	// ACCESS_MODE_DATA rw is read and write    	
     	
+        ConnectionFactory connectionFactory = ConnectionFactories.get(
+        		
+//                "r2dbc:h2:mem:///testdb?options="+
+                "r2dbc:h2:mem:///testdb;"+
+                    "DB_CLOSE_DELAY=-1;"+
+                    "ACCESS_MODE_DATA=rw");
+        
+/*
         ConnectionFactory connectionFactory = new H2ConnectionFactory(
-                H2ConnectionConfiguration.builder( )
+        		
+                 H2ConnectionConfiguration.builder( )
                         .inMemory("testdb")
                         .username( env.getProperty( "spring.r2dbc.username", "SA" ) )
                         .password( env.getProperty( "spring.r2dbc.password", "" ) )
-                        //.options( options )
-                        .build( )
+                        // Keeps DB alive until the virtual machine shuts down or all connections are closed
+                        .property(H2ConnectionOption.DB_CLOSE_DELAY, "-1")   // Keeps DB alive                      
+                        .property(H2ConnectionOption.ACCESS_MODE_DATA, "rw")   // read and write  
+                        .build()
         );
-
+*/
     	String envValue = env.getProperty("spring.r2dbc.pool.enabled");
     	System.out.println("The Auto Configure H2 Connection Pool is: " + envValue);
     	
