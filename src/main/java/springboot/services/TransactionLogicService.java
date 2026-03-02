@@ -73,6 +73,14 @@ public class TransactionLogicService
 			// .flatMap() does not
 			
 			return taskRepository.save(task)
+	        .doOnError(ex -> {
+	            // This block is executed if an error is thrown within the transaction
+	            System.out.println("Transaction failed: " + ex.getMessage());
+	            // The transaction will be marked for rollback automatically
+	            if (!status.isRollbackOnly()) {
+	            	status.setRollbackOnly();
+	            }
+	        }) // end doOnError	        
 			.<ResponseEntity<Object>>flatMap(savedEntity -> {  
 	        	// In the future write entityToJson to Kafka or RabbitMQ.
 				// Another process(maybe mulesoft or AWS Lambda) can read the queue and store the json,
@@ -132,6 +140,14 @@ public class TransactionLogicService
                 fetchedTask.setTaskStatus(updateTaskStatus.getNewTaskStatus());
                 return taskRepository.save(fetchedTask);
 	        })  // end the flatMap
+	        .doOnError(ex -> {
+	            // This block is executed if an error is thrown within the transaction
+	            System.out.println("Transaction failed: " + ex.getMessage());
+	            // The transaction will be marked for rollback automatically
+	            if (!status.isRollbackOnly()) {
+	            	status.setRollbackOnly();
+	            }
+	        }) // end doOnError	        
 			.<ResponseEntity<Object>>flatMap(savedEntity -> {
 
 	        	// In the future write entityToJson to Kafka or RabbitMQ.
