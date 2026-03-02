@@ -79,11 +79,11 @@ public class TransactionLogicService
 			            	
 						String errorJson = null;
 						if (!status.isRollbackOnly()) { // check if the database insert worked
-							NonModelAdditionalFields additionalFields = new NonModelAdditionalFields();
-							additionalFields.setSource("T-Mobile");
-							additionalFields.setOperation(OperationEnum.CREATE.getValue());
+							NonModelAdditionalFields additionalFields = new NonModelAdditionalFields(
+								"T-Mobile", OperationEnum.CREATE.getValue());
+//							additionalFields.addUpdateInfo("String", "Tasks", "task_status", "Assigned", "Completed");
 							String queueJson = goodResponse(savedEntity, requestStringBuilderContainer, additionalFields);
-							System.out.println("Queue Json is" + queueJson);
+							System.out.println("Queue Json is: " + queueJson);
 							result.setResult(true);
 						} else { // build error Json
 							errorJson = buildDatabaseOrQueueingError("A database insert failed.");
