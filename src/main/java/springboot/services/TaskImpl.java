@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.TransactionException;
 //import org.springframework.transaction.annotation.Propagation;
 //import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.reactive.TransactionalOperator;
@@ -125,12 +126,21 @@ public class TaskImpl
 		tempEntity.setTaskCreateDate(zonedDateTime);
 		tempEntity.setTaskLastUpdateDate(null);
 		
-//		Mono<TaskEntity> tempMono = Mono.just(tempEntity);
-		
-		Flux<ResponseEntity<Object>> tempFlux = transactionLogicService.createTransactionResult(request,
+		Mono<ResponseEntity<Object>> retVar = null;
+
+		try {
+			Flux<ResponseEntity<Object>> tempFlux = transactionLogicService.createTransactionResult(request,
 				tempEntity, transactionalOperator, requestStringBuilderContainer);
+			retVar = tempFlux.next();  // returns a Mono of the Flux element
+		} catch (TransactionException te) {
+			String errorJson = buildDatabaseOrQueueingError("A database insert Transaction failed.");
+			retVar = Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
+		} catch (RuntimeException re) {
+			String errorJson = buildDatabaseOrQueueingError("A database insert Transaction failed.");
+			retVar = Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
+		}
 		
-		return tempFlux.next();  // returns a Mono of the Flux element
+		return retVar; 
 		
 		
 				
@@ -177,10 +187,25 @@ public class TaskImpl
 		TransactionalOperator transactionalOperator = 
 				(TransactionalOperator) getBean(TRANSACTIONAL_OPERATOR);
 		
-		// support CORS - createResponseHeader(request);
-		// flatMap is designed for asynchronous, one-to-many transformations
-		// map is designed for synchronous, one-to-one data transformations 
-    	
+		Mono<ResponseEntity<Object>> retVar = null;
+
+ 		try {
+			Flux<ResponseEntity<Object>> tempFlux = transactionLogicService.updateTransactionResult(request,
+				updateTaskStatus, transactionalOperator, requestStringBuilderContainer);
+			retVar = tempFlux.next();  // returns a Mono of the Flux element
+		} catch (TransactionException te) {
+			String errorJson = buildDatabaseOrQueueingError("A database Update Transaction failed.");
+			retVar = Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
+		} catch (RuntimeException re) {
+			String errorJson = buildDatabaseOrQueueingError("A database Update Transaction failed.");
+			retVar = Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
+		}
+		
+		return retVar;  
+		
+
+/*
+	
         return taskRepository.findById(updateTaskStatus.getId())
             .switchIfEmpty(Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(NOT_FOUND_TABLE_NAME, updateTaskStatus.getId()))))
             .flatMap(fetchedTask -> {
@@ -196,6 +221,8 @@ public class TaskImpl
                	return ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(entityToJson);
             })
             .as(transactionalOperator::transactional); // Wrap the operations in a transaction
+*/            
+           
     }
     
 	@Override
