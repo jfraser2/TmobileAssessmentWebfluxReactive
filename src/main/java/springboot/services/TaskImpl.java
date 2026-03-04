@@ -127,16 +127,18 @@ public class TaskImpl
 		tempEntity.setTaskLastUpdateDate(null);
 		
 		Mono<ResponseEntity<Object>> retVar = null;
+		
+		boolean databaseSaveFailed = true;
 
 		try {
 			Flux<ResponseEntity<Object>> tempFlux = transactionLogicService.createTransactionResult(request,
 				tempEntity, transactionalOperator, requestStringBuilderContainer);
 			retVar = tempFlux.next();  // returns a Mono of the Flux element
 		} catch (TransactionException te) {
-			String errorJson = buildDatabaseOrQueueingError("A database insert Transaction failed.");
+			String errorJson = buildDatabaseOrQueueingError("A database insert Transaction failed: " + te.getMessage());
 			retVar = Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
 		} catch (RuntimeException re) {
-			String errorJson = buildDatabaseOrQueueingError("A database insert Transaction failed.");
+			String errorJson = buildDatabaseOrQueueingError("A database insert Transaction failed: " + re.getMessage());
 			retVar = Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
 		}
 		
@@ -186,22 +188,35 @@ public class TaskImpl
 				(StringBuilderContainer) getBean(STRING_BUILDER_CONTAINER);
 		TransactionalOperator transactionalOperator = 
 				(TransactionalOperator) getBean(TRANSACTIONAL_OPERATOR);
+		TransactionalOperator readOnlyTransactionalOperator = 
+				(TransactionalOperator) getBean(READ_ONLY_TRANSACTIONAL_OPERATOR);
 		
-		Mono<ResponseEntity<Object>> retVar = null;
-
- 		try {
-			Flux<ResponseEntity<Object>> tempFlux = transactionLogicService.updateTransactionResult(request,
-				updateTaskStatus, transactionalOperator, requestStringBuilderContainer);
-			retVar = tempFlux.next();  // returns a Mono of the Flux element
+		try {
+			return transactionLogicService.preReadTaskById(
+					updateTaskStatus.getId(), readOnlyTransactionalOperator)
+			.<ResponseEntity<Object>>flatMap(fetchedTask -> {
+				
+				if (fetchedTask.getId() != -1L) {
+					ZonedDateTime zonedDateTime = ZonedDateTimeEnum.INSTANCE.now();
+					fetchedTask.setTaskLastUpdateDate(zonedDateTime);
+					fetchedTask.setTaskStatus(updateTaskStatus.getNewTaskStatus());
+					
+					Flux<ResponseEntity<Object>> tempFlux = transactionLogicService.updateTransactionResult(request,
+							fetchedTask, transactionalOperator, requestStringBuilderContainer);	
+					return tempFlux.next();
+					
+				} else {
+					return Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(NOT_FOUND_TABLE_NAME, updateTaskStatus.getId())));
+				}
+			}); // end the flatMap
 		} catch (TransactionException te) {
-			String errorJson = buildDatabaseOrQueueingError("A database Update Transaction failed.");
-			retVar = Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
+			String errorJson = buildDatabaseOrQueueingError("A database updateTransaction failed: " + te.getMessage());
+			return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
 		} catch (RuntimeException re) {
-			String errorJson = buildDatabaseOrQueueingError("A database Update Transaction failed.");
-			retVar = Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
+			String errorJson = buildDatabaseOrQueueingError("A database update Transaction failed: " + re.getMessage());
+			return  Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
 		}
 		
-		return retVar;  
 		
 
 /*

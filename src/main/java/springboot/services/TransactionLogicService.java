@@ -1,9 +1,5 @@
 package springboot.services;
 
-import java.time.ZonedDateTime;
-
-//import java.time.ZonedDateTime;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,12 +11,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import springboot.autowire.helpers.StringBuilderContainer;
 import springboot.dto.processing.QueueResult;
-import springboot.dto.request.UpdateTaskStatus;
 import springboot.dto.response.NonModelAdditionalFields;
-import springboot.dto.validation.exceptions.DatabaseRowNotFoundException;
 import springboot.entities.TaskEntity;
 import springboot.enums.OperationEnum;
-import springboot.enums.ZonedDateTimeEnum;
 //import springboot.enums.ZonedDateTimeEnum;
 import springboot.repositories.TaskRepository;
 
@@ -29,8 +22,6 @@ public class TransactionLogicService
 	extends ServiceBase
 {
 	
-	private static final String NOT_FOUND_TABLE_NAME = "Task";
-
 	@Autowired
 	private TaskRepository taskRepository;
 
@@ -53,6 +44,44 @@ public class TransactionLogicService
 	}
 */	
 
+	public Mono<TaskEntity> preReadTaskById(Long recordId, TransactionalOperator transactionalOperator) {
+		
+		Flux<TaskEntity> tempFlux = transactionalOperator.execute(status -> {  
+
+			// Perform updates/inserts within this block
+				
+			// support CORS - createResponseHeader(request);
+			// flatMap is designed for asynchronous, one-to-many transformations
+			// map is designed for synchronous, one-to-one data transformations
+			
+			// .map() automatically converts the return Object to a Mono 
+			// .flatMap() does not
+			
+			return taskRepository.findById(recordId)
+//		    .switchIfEmpty(Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(NOT_FOUND_TABLE_NAME, recordId))))
+			.defaultIfEmpty(new TaskEntity(-1L))					
+	        .doOnError(ex -> {
+	            // This block is executed if an error is thrown within the transaction
+	            System.out.println(" preReadTaskById Transaction failed: " + ex.getMessage());
+	            // The transaction will be marked for rollback automatically
+	            if (!status.isRollbackOnly()) {
+	            	status.setRollbackOnly();
+	            }
+	        }) // end doOnError	
+			.<TaskEntity>map(fetchedEntity -> {
+				System.out.println("Chain did Continue");
+				if (!status.isRollbackOnly()) {
+					return fetchedEntity;
+				} else {
+					TaskEntity nullEntity = new TaskEntity(-1L);
+					return nullEntity;
+				}
+	        }) ; // end the map automatically converts the return Object to a Mono
+		}); // end the execute
+		
+		return tempFlux.next();  // returns a Mono of the Flux element
+	}
+	
 	public Flux<ResponseEntity<Object>> createTransactionResult( ServerHttpRequest request, 
 			TaskEntity task,
 			TransactionalOperator transactionalOperator,
@@ -114,7 +143,7 @@ public class TransactionLogicService
 	}
 	
 	public Flux<ResponseEntity<Object>> updateTransactionResult( ServerHttpRequest request, 
-			UpdateTaskStatus updateTaskStatus,
+			TaskEntity updatedTaskEntity,
 			TransactionalOperator transactionalOperator,
 			StringBuilderContainer requestStringBuilderContainer)
 	{
@@ -132,23 +161,16 @@ public class TransactionLogicService
 			// .map() automatically converts the return Object to a Mono 
 			// .flatMap() does not
 			
-			return taskRepository.findById(updateTaskStatus.getId())
-		    .switchIfEmpty(Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(NOT_FOUND_TABLE_NAME, updateTaskStatus.getId()))))
-	        .flatMap(fetchedTask -> {
-	    	    ZonedDateTime zonedDateTime = ZonedDateTimeEnum.INSTANCE.now();
-        		fetchedTask.setTaskLastUpdateDate(zonedDateTime);
-                fetchedTask.setTaskStatus(updateTaskStatus.getNewTaskStatus());
-                return taskRepository.save(fetchedTask);
-	        })  // end the flatMap
+			return taskRepository.save(updatedTaskEntity)
 	        .doOnError(ex -> {
 	            // This block is executed if an error is thrown within the transaction
-	            System.out.println("Transaction failed: " + ex.getMessage());
+	            System.out.println("update Transaction failed: " + ex.getMessage());
 	            // The transaction will be marked for rollback automatically
 	            if (!status.isRollbackOnly()) {
 	            	status.setRollbackOnly();
 	            }
 	        }) // end doOnError	        
-			.<ResponseEntity<Object>>flatMap(savedEntity -> {
+			.<ResponseEntity<Object>>map(savedEntity -> {
 
 	        	// In the future write entityToJson to Kafka or RabbitMQ.
 				// Another process(maybe mulesoft or AWS Lambda) can read the queue and store the json,
@@ -158,7 +180,7 @@ public class TransactionLogicService
 				QueueResult result = new QueueResult(savedEntity, false);
 	            	
 				String errorJson = null;
-				if (!status.isRollbackOnly()) { // check if the database insert worked
+				if (!status.isRollbackOnly()) { // check if the database update worked
 					NonModelAdditionalFields additionalFields = new NonModelAdditionalFields(
 						"T-Mobile", OperationEnum.UPDATE.getValue());
 					additionalFields.addUpdateInfo("String", "Tasks", "task_status", savedEntity.getTaskStatus());
@@ -166,19 +188,19 @@ public class TransactionLogicService
 					System.out.println("Queue Json is: " + queueJson);
 					result.setResult(true);
 				} else { // build error Json
-					errorJson = buildDatabaseOrQueueingError("A database update failed.");
+					errorJson = buildDatabaseOrQueueingError("A database update failed for Id: " + savedEntity.getId());
 				}
 				
 				System.out.println("Queueing Processed: " + result.getResult());
 				
 				if (result.getResult()) {
 					String entityToJson = goodResponse(savedEntity, requestStringBuilderContainer, null);
-				    return Mono.just(ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(entityToJson));
+				    return ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(entityToJson);
 				} else {
 					status.setRollbackOnly(); // Mark for rollback
-				    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
+				    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson);
 				}
-			}); // end the flatMap 
+			}); // end the map, automatically converts the return Object to a Mono
 		}); // end the execute
 	}
 	
