@@ -19,6 +19,13 @@ import springboot.errorHandling.helpers.ZonedDateTimeConverter;
 @Entity
 public class TaskEntity {
 	
+	public TaskEntity() {
+	}
+	
+	public TaskEntity(Long notFoundId) {
+		this.id = notFoundId;
+	}
+	
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", columnDefinition = "int")
