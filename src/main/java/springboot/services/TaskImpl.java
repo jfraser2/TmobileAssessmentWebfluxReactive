@@ -14,9 +14,7 @@ import org.springframework.transaction.TransactionException;
 //import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.reactive.TransactionalOperator;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import springboot.autowire.helpers.RowDelete;
 import springboot.autowire.helpers.StringBuilderContainer;
 import springboot.dto.request.CreateTask;
 import springboot.dto.request.UpdateTaskStatus;
@@ -42,7 +40,7 @@ public class TaskImpl
 {
 	
 	private static final String ENTITY_CLASS_NAME = "TaskEntity";
-	private static final String NOT_FOUND_TABLE_NAME = "Task";
+	public static final String NOT_FOUND_TABLE_NAME = "Task";
 	
 	@Autowired
 	private TaskRepository taskRepository;
@@ -128,12 +126,10 @@ public class TaskImpl
 		
 		Mono<ResponseEntity<Object>> retVar = null;
 		
-		boolean databaseSaveFailed = true;
-
 		try {
-			Flux<ResponseEntity<Object>> tempFlux = transactionLogicService.createTransactionResult(request,
+			Mono<ResponseEntity<Object>> tempMono = transactionLogicService.createTransactionResult(request,
 				tempEntity, transactionalOperator, requestStringBuilderContainer);
-			retVar = tempFlux.next();  // returns a Mono of the Flux element
+			retVar = tempMono; 
 		} catch (TransactionException te) {
 			String errorJson = buildDatabaseOrQueueingError("A database insert Transaction failed: " + te.getMessage());
 			retVar = Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
@@ -201,16 +197,16 @@ public class TaskImpl
 					fetchedTask.setTaskLastUpdateDate(zonedDateTime);
 					fetchedTask.setTaskStatus(updateTaskStatus.getNewTaskStatus());
 					
-					Flux<ResponseEntity<Object>> tempFlux = transactionLogicService.updateTransactionResult(request,
+					Mono<ResponseEntity<Object>> tempMono = transactionLogicService.updateTransactionResult(request,
 							fetchedTask, transactionalOperator, requestStringBuilderContainer);	
-					return tempFlux.next();
+					return tempMono; 
 					
 				} else {
 					return Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(NOT_FOUND_TABLE_NAME, updateTaskStatus.getId())));
 				}
 			}); // end the flatMap
 		} catch (TransactionException te) {
-			String errorJson = buildDatabaseOrQueueingError("A database updateTransaction failed: " + te.getMessage());
+			String errorJson = buildDatabaseOrQueueingError("A database update Transaction failed: " + te.getMessage());
 			return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
 		} catch (RuntimeException re) {
 			String errorJson = buildDatabaseOrQueueingError("A database update Transaction failed: " + re.getMessage());
@@ -245,18 +241,37 @@ public class TaskImpl
         // The entire chain within the .as(operator::transactional) block runs in a single transaction
 		StringBuilderContainer requestStringBuilderContainer = 
 				(StringBuilderContainer) getBean(STRING_BUILDER_CONTAINER);
-		RowDelete rowDelete = (RowDelete) getBean(ROW_DELETE_BEAN);
 		TransactionalOperator transactionalOperator = 
 				(TransactionalOperator) getBean(TRANSACTIONAL_OPERATOR);
+		TransactionalOperator readOnlyTransactionalOperator = 
+				(TransactionalOperator) getBean(READ_ONLY_TRANSACTIONAL_OPERATOR);
 		
-    	rowDelete.setTimestamp(ZonedDateTimeEnum.INSTANCE.now());
-    	String message = buildRowDeleteMessage(NOT_FOUND_TABLE_NAME, taskId);
-    	rowDelete.setMessage(message);
+		try {
+			return transactionLogicService.preReadTaskById(
+					taskId, readOnlyTransactionalOperator)
+			.<ResponseEntity<Object>>flatMap(fetchedTask -> {
+				
+				if (fetchedTask.getId() != -1L) {
+					
+					Mono<ResponseEntity<Object>> tempMono = transactionLogicService.deleteTransactionResult(request,
+							Mono.just(fetchedTask), transactionalOperator, requestStringBuilderContainer);	
+					return tempMono;
+					
+				} else {
+					return Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(NOT_FOUND_TABLE_NAME, taskId)));
+				}
+			}); // end the flatMap
+		} catch (TransactionException te) {
+			String errorJson = buildDatabaseOrQueueingError("A database delete Transaction failed: " + te.getMessage());
+			return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
+		} catch (RuntimeException re) {
+			String errorJson = buildDatabaseOrQueueingError("A database delete Transaction failed: " + re.getMessage());
+			return  Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
+		}
     	
-		// support CORS - createResponseHeader(request);
-		// flatMap is designed for asynchronous, one-to-many transformations
-		// map is designed for synchronous, one-to-one data transformations 
     	
+    	
+/*    	
         return taskRepository.findById(taskId)
             .switchIfEmpty(Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(NOT_FOUND_TABLE_NAME, taskId))))
             .flatMap(fetchedTask -> taskRepository.delete(fetchedTask)
@@ -270,6 +285,7 @@ public class TaskImpl
                	return ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(entityToJson);
             })
             .as(transactionalOperator::transactional); // Wrap the operations in a transaction
+*/            
     }
     
 }

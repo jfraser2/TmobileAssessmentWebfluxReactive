@@ -10,6 +10,7 @@ import springboot.errorHandling.helpers.ZonedDateTimeConverter;
 
 public class RowDelete {
 	
+    private Long id;
 	@JsonSerialize(using = ZonedDateTimeConverter.class)
     @TimeZoneStorage(TimeZoneStorageType.NATIVE)
     private ZonedDateTime  timestamp;
@@ -34,6 +35,14 @@ public class RowDelete {
 
 	public void setTimestamp(ZonedDateTime timestamp) {
 		this.timestamp = timestamp;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
 	}
 	
 }

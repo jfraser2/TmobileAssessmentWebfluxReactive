@@ -9,11 +9,13 @@ import org.springframework.transaction.reactive.TransactionalOperator;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import springboot.autowire.helpers.RowDelete;
 import springboot.autowire.helpers.StringBuilderContainer;
 import springboot.dto.processing.QueueResult;
 import springboot.dto.response.NonModelAdditionalFields;
 import springboot.entities.TaskEntity;
 import springboot.enums.OperationEnum;
+import springboot.enums.ZonedDateTimeEnum;
 //import springboot.enums.ZonedDateTimeEnum;
 import springboot.repositories.TaskRepository;
 
@@ -69,7 +71,7 @@ public class TransactionLogicService
 	            }
 	        }) // end doOnError	
 			.<TaskEntity>map(fetchedEntity -> {
-				System.out.println("Chain did Continue");
+//				System.out.println("Chain did Continue");
 				if (!status.isRollbackOnly()) {
 					return fetchedEntity;
 				} else {
@@ -82,7 +84,7 @@ public class TransactionLogicService
 		return tempFlux.next();  // returns a Mono of the Flux element
 	}
 	
-	public Flux<ResponseEntity<Object>> createTransactionResult( ServerHttpRequest request, 
+	public Mono<ResponseEntity<Object>> createTransactionResult( ServerHttpRequest request, 
 			TaskEntity task,
 			TransactionalOperator transactionalOperator,
 			StringBuilderContainer requestStringBuilderContainer)
@@ -139,10 +141,10 @@ public class TransactionLogicService
 				    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
 				}
 			}); // end the flatMap
-		}); // end the execute
+		}).last(); // end the execute
 	}
 	
-	public Flux<ResponseEntity<Object>> updateTransactionResult( ServerHttpRequest request, 
+	public Mono<ResponseEntity<Object>> updateTransactionResult( ServerHttpRequest request, 
 			TaskEntity updatedTaskEntity,
 			TransactionalOperator transactionalOperator,
 			StringBuilderContainer requestStringBuilderContainer)
@@ -201,7 +203,77 @@ public class TransactionLogicService
 				    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson);
 				}
 			}); // end the map, automatically converts the return Object to a Mono
-		}); // end the execute
+		}).last(); // end the execute
+	}
+	
+	public Mono<ResponseEntity<Object>> deleteTransactionResult( ServerHttpRequest request, 
+			Mono<TaskEntity> taskEntityToDelete,
+			TransactionalOperator transactionalOperator,
+			StringBuilderContainer requestStringBuilderContainer)
+	{
+		
+		// Wrap the operations in a transaction	
+		// Using the Lambda Implementation of the Callback doInTransaction(ReactiveTransaction status) method 
+		return transactionalOperator.execute(status -> {  
+
+			// Perform updates/inserts within this block
+				
+			// support CORS - createResponseHeader(request);
+			// flatMap is designed for asynchronous, one-to-many transformations
+			// map is designed for synchronous, one-to-one data transformations
+			
+			// .map() automatically converts the return Object to a Mono 
+			// .flatMap() does not
+			
+            return taskEntityToDelete.flatMap(fetchedTask -> taskRepository.delete(fetchedTask)
+            		.then(Mono.just(fetchedTask)) // 3. Return a Mono of the original object 
+            )
+ 	        .doOnError(ex -> {
+	            // This block is executed if an error is thrown within the transaction
+	            System.out.println("delete Transaction failed: " + ex.getMessage());
+	            // The transaction will be marked for rollback automatically
+	            if (!status.isRollbackOnly()) {
+	            	status.setRollbackOnly();
+	            }
+	        }) // end doOnError	   
+			.<ResponseEntity<Object>>map(deleteReturn -> {
+				
+				RowDelete rowDeleteInfo = new RowDelete();
+		    	rowDeleteInfo.setTimestamp(ZonedDateTimeEnum.INSTANCE.now());
+		    	String message = buildRowDeleteMessage(TaskImpl.NOT_FOUND_TABLE_NAME, deleteReturn.getId());
+		    	rowDeleteInfo.setMessage(message);
+		    	rowDeleteInfo.setId(deleteReturn.getId());
+				
+
+	        	// In the future write entityToJson to Kafka or RabbitMQ.
+				// Another process(maybe mulesoft or AWS Lambda) can read the queue and store the json,
+				// in an Iceberg table living in AWS S3.
+				// The S3 bucket will store the json, using the OLAP data lake format parquet.
+				// Then snowflake can use it.
+				QueueResult result = new QueueResult(deleteReturn, false);
+	            	
+				String errorJson = null;
+				if (!status.isRollbackOnly()) { // check if the database update worked
+					NonModelAdditionalFields additionalFields = new NonModelAdditionalFields(
+						"T-Mobile", OperationEnum.DELETE.getValue());
+					String queueJson = goodResponse(deleteReturn, requestStringBuilderContainer, additionalFields);
+					System.out.println("Queue Json is: " + queueJson);
+					result.setResult(true);
+				} else { // build error Json
+					errorJson = buildDatabaseOrQueueingError("A database delete failed for Id: " + deleteReturn.getId());
+				}
+				
+				System.out.println("Queueing Processed: " + result.getResult());
+				
+				if (result.getResult()) {
+					String entityToJson = goodResponse(rowDeleteInfo, requestStringBuilderContainer, null);
+				    return ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(entityToJson);
+				} else {
+					status.setRollbackOnly(); // Mark for rollback
+				    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson);
+				}
+			}); // end the map, automatically converts the return Object to a Mono
+		}).last(); // end the execute
 	}
 	
 	// sample code to save
@@ -211,20 +283,5 @@ public class TransactionLogicService
 	//					asyncPublishToQueue(Mono.just(savedEntity));				
 	//				})
 	//				.doOnError(e -> status.setRollbackOnly()) // Optional manual rollback
-				
-// This code messed up the persistance of the .save()				
-				
-/*						
-			    .onErrorResume(e -> {
-			        System.out.println("Save failed: " +  e.getMessage());
-			        if (!status.isRollbackOnly()) {
-			        	status.setRollbackOnly(); // Mark for rollback
-			        }	
-			        // Fallback option 1: Return a default value
-			        // return Mono.just(defaultValue);
-			        // Fallback option 2: Return a custom exception
-			        return Mono.just(buildFake(false));
-			    })	// end onErrorResume	
-*/				    				
 	
 }
