@@ -7,7 +7,6 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.reactive.TransactionalOperator;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import springboot.autowire.helpers.RowDelete;
 import springboot.autowire.helpers.StringBuilderContainer;
@@ -48,7 +47,7 @@ public class TransactionLogicService
 
 	public Mono<TaskEntity> preReadTaskById(Long recordId, TransactionalOperator transactionalOperator) {
 		
-		Flux<TaskEntity> tempFlux = transactionalOperator.execute(status -> {  
+		return transactionalOperator.execute(status -> {  
 
 			// Perform updates/inserts within this block
 				
@@ -79,9 +78,7 @@ public class TransactionLogicService
 					return nullEntity;
 				}
 	        }) ; // end the map automatically converts the return Object to a Mono
-		}); // end the execute
-		
-		return tempFlux.next();  // returns a Mono of the Flux element
+		}).last(); // end the execute
 	}
 	
 	public Mono<ResponseEntity<Object>> createTransactionResult( ServerHttpRequest request, 
@@ -238,7 +235,7 @@ public class TransactionLogicService
 	        }) // end doOnError	   
 			.<ResponseEntity<Object>>map(deleteReturn -> {
 				
-				RowDelete rowDeleteInfo = new RowDelete();
+				RowDelete rowDeleteInfo = (RowDelete) getBean(ROW_DELETE_BEAN);
 		    	rowDeleteInfo.setTimestamp(ZonedDateTimeEnum.INSTANCE.now());
 		    	String message = buildRowDeleteMessage(TaskImpl.NOT_FOUND_TABLE_NAME, deleteReturn.getId());
 		    	rowDeleteInfo.setMessage(message);
