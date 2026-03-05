@@ -183,6 +183,9 @@ public class TransactionLogicService
 					NonModelAdditionalFields additionalFields = new NonModelAdditionalFields(
 						"T-Mobile", OperationEnum.UPDATE.getValue());
 					additionalFields.addUpdateInfo("String", "Tasks", "task_status", savedEntity.getTaskStatus());
+					String lastUpdate = ZonedDateTimeEnum.INSTANCE.
+						writeDateString(savedEntity.getTaskLastUpdateDate(), ZonedDateTimeEnum.INSTANCE.DATE_FORMAT3);
+					additionalFields.addUpdateInfo("ZonedDateTime", "Tasks", "task_last_update_date", lastUpdate);
 					String queueJson = goodResponse(savedEntity, requestStringBuilderContainer, additionalFields);
 					System.out.println("Queue Json is: " + queueJson);
 					result.setResult(true);
