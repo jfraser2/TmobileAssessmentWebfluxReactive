@@ -6,19 +6,19 @@ public class UpdateInfo {
 	// statement on a remote Warehouse System(OLAP)
 	private String dataType;
 	private String tableName;
-	private String fieldName;
-	private String newValue;
+	private String dbFieldName;
+	private String jsonFieldName;
 	
 	public UpdateInfo() {
 		
 	}
 
-	public UpdateInfo(String dataType, String tableName, String fieldName, String newValue) {
+	public UpdateInfo(String dataType, String tableName, String dbFieldName, String jsonFieldName) {
 		super();
 		this.dataType = dataType;
 		this.tableName = tableName;
-		this.fieldName = fieldName;
-		this.newValue = newValue;
+		this.dbFieldName = dbFieldName;
+		this.jsonFieldName = jsonFieldName;
 	}
 	
 	public String getDataType() {
@@ -36,21 +36,21 @@ public class UpdateInfo {
 	public void setTableName(String tableName) {
 		this.tableName = tableName;
 	}
+
+	public String getDbFieldName() {
+		return dbFieldName;
+	}
+
+	public void setDbFieldName(String dbFieldName) {
+		this.dbFieldName = dbFieldName;
+	}
+
+	public String getJsonFieldName() {
+		return jsonFieldName;
+	}
+
+	public void setJsonFieldName(String jsonFieldName) {
+		this.jsonFieldName = jsonFieldName;
+	}
 	
-	public String getFieldName() {
-		return fieldName;
-	}
-
-	public void setFieldName(String fieldName) {
-		this.fieldName = fieldName;
-	}
-
-	public String getNewValue() {
-		return newValue;
-	}
-
-	public void setNewValue(String newValue) {
-		this.newValue = newValue;
-	}
-
 }

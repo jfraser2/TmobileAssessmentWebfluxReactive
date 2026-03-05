@@ -88,7 +88,7 @@ public class NonModelAdditionalFields {
 		this.updateData.add(anUpdateRec);
 	}
 	
-	public void addUpdateInfo(String dataType, String tableName, String fieldName, String newValue)
+	public void addUpdateInfo(String dataType, String tableName, String dbFieldName, String jsonFieldName)
 	{
 		if (null == updateData) {
 			this.updateData = new ArrayList<>();
@@ -97,8 +97,8 @@ public class NonModelAdditionalFields {
 		UpdateInfo updateData = new UpdateInfo(
 			dataType,
 			tableName,
-			fieldName,
-			newValue
+			dbFieldName,
+			jsonFieldName
 		);
 		
 		this.updateData.add(updateData);
