@@ -111,9 +111,9 @@ public class TransactionLogicService
 	        }) // end doOnError	        
 			.<ResponseEntity<Object>>flatMap(savedEntity -> {  
 	        	// In the future write entityToJson to Kafka or RabbitMQ.
-				// Another process(maybe mulesoft or AWS Lambda) can read the queue and store the json,
-				// in an Iceberg table living in AWS S3.
-				// The S3 bucket will store the json, using the OLAP data lake format parquet.
+				// Another process(maybe mulesoft or AWS Lambda or Apache Flink) can read the queue
+				//  and store the json, in an Iceberg table living in AWS S3.
+				// The S3 bucket would store the json, using the OLAP data lake format parquet.
 				// Then snowflake can use it.
 				QueueResult result = new QueueResult(savedEntity, false);
 	            	
@@ -172,9 +172,9 @@ public class TransactionLogicService
 			.<ResponseEntity<Object>>map(savedEntity -> {
 
 	        	// In the future write entityToJson to Kafka or RabbitMQ.
-				// Another process(maybe mulesoft or AWS Lambda) can read the queue and store the json,
-				// in an Iceberg table living in AWS S3.
-				// The S3 bucket will store the json, using the OLAP data lake format parquet.
+				// Another process(maybe mulesoft or AWS Lambda or Apache Flink) can read the queue
+				//  and store the json, in an Iceberg table living in AWS S3.
+				// The S3 bucket would store the json, using the OLAP data lake format parquet.
 				// Then snowflake can use it.
 				QueueResult result = new QueueResult(savedEntity, false);
 	            	
@@ -244,9 +244,9 @@ public class TransactionLogicService
 				
 
 	        	// In the future write entityToJson to Kafka or RabbitMQ.
-				// Another process(maybe mulesoft or AWS Lambda) can read the queue and store the json,
-				// in an Iceberg table living in AWS S3.
-				// The S3 bucket will store the json, using the OLAP data lake format parquet.
+				// Another process(maybe mulesoft or AWS Lambda or Apache Flink) can read the queue
+				//  and store the json, in an Iceberg table living in AWS S3.
+				// The S3 bucket would store the json, using the OLAP data lake format parquet.
 				// Then snowflake can use it.
 				QueueResult result = new QueueResult(deleteReturn, false);
 	            	
