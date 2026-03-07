@@ -7,7 +7,7 @@ public class UpdateInfo {
 	private String dataType;
 	private String tableName;
 	private String dbFieldName;
-	private String jsonFieldName;
+	private String jsonFieldName; // pointer to an updated field in the json data
 	
 	public UpdateInfo() {
 		
