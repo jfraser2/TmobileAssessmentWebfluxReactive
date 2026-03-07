@@ -51,7 +51,7 @@ public class ReactiveTransactionConfig {
     	
     	DefaultTransactionDefinition definition = new DefaultTransactionDefinition();
     	definition.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
-    	definition.setReadOnly(false); // H2 does not support true or false
+    	definition.setReadOnly(true); // H2 does not support true or false
         definition.setTimeout(30);  // 30 seconds
         // will join the current Transaction if one exists or start a new one
         definition.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRED);
