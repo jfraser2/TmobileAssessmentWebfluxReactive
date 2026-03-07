@@ -123,6 +123,7 @@ public class TransactionLogicService
 						"T-Mobile", OperationEnum.CREATE.getValue());
 					String queueJson = goodResponse(savedEntity, requestStringBuilderContainer, additionalFields);
 					System.out.println("Queue Json is: " + queueJson);
+					errorJson = buildDatabaseOrQueueingError("A queueing insert failed, during create.");
 					result.setResult(true);
 				} else { // build error Json
 					errorJson = buildDatabaseOrQueueingError("A database insert failed.");
@@ -186,6 +187,7 @@ public class TransactionLogicService
 					additionalFields.addUpdateInfo("ZonedDateTime", "Tasks", "task_last_update_date", " taskLastUpdateDate");
 					String queueJson = goodResponse(savedEntity, requestStringBuilderContainer, additionalFields);
 					System.out.println("Queue Json is: " + queueJson);
+					errorJson = buildDatabaseOrQueueingError("A queueing insert failed, during update for Id: " + savedEntity.getId());
 					result.setResult(true);
 				} else { // build error Json
 					errorJson = buildDatabaseOrQueueingError("A database update failed for Id: " + savedEntity.getId());
@@ -256,6 +258,7 @@ public class TransactionLogicService
 						"T-Mobile", OperationEnum.DELETE.getValue());
 					String queueJson = goodResponse(deleteReturn, requestStringBuilderContainer, additionalFields);
 					System.out.println("Queue Json is: " + queueJson);
+					errorJson = buildDatabaseOrQueueingError("A queueing insert failed, during delete for Id: " + deleteReturn.getId());
 					result.setResult(true);
 				} else { // build error Json
 					errorJson = buildDatabaseOrQueueingError("A database delete failed for Id: " + deleteReturn.getId());
