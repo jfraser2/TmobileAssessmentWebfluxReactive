@@ -166,15 +166,36 @@ public class TaskImpl
 		TransactionalOperator readOnlyTransactionalOperator = 
 				(TransactionalOperator) getBean(READ_ONLY_TRANSACTIONAL_OPERATOR);
 		
-		// support CORS - createResponseHeader(request);
-		// map is designed for synchronous, one-to-one data transformations 
+		try {
+			return transactionLogicService.preReadTaskById(
+					id, readOnlyTransactionalOperator)
+			.<ResponseEntity<Object>>flatMap(fetchedTask -> {
+				
+				if (fetchedTask.getId() > 0L) {
+					return Mono.just(ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(goodResponse(fetchedTask , requestStringBuilderContainer, null)));
+				} else if (fetchedTask.getId().equals(READ_NOT_FOUND)){
+					return Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(NOT_FOUND_TABLE_NAME, id)));
+				} else {
+					String errorJson = buildDatabaseOrQueueingError("A database read failed, for Id: " + id);
+					return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
+				}
+			}); // end the flatMap
+		} catch (TransactionException te) {
+			String errorJson = buildDatabaseOrQueueingError("A database read Transaction failed: " + te.getMessage());
+			return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
+		} catch (RuntimeException re) {
+			String errorJson = buildDatabaseOrQueueingError("A database read Transaction failed: " + re.getMessage());
+			return  Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
+		}
 		
+/*		
 		return taskRepository.findById(id)
 	            .switchIfEmpty(Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(NOT_FOUND_TABLE_NAME, id))))
 	            .<ResponseEntity<Object>>map(task -> {
 					return ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(goodResponse(task, requestStringBuilderContainer, null));
 				})
 				.as(readOnlyTransactionalOperator::transactional); // Wrap the operations in a transaction
+*/				
 	}
 	
 	@Override
