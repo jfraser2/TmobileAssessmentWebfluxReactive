@@ -60,23 +60,16 @@ public class TransactionLogicService
 			
 			return taskRepository.findById(recordId)
 //		    .switchIfEmpty(Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(NOT_FOUND_TABLE_NAME, recordId))))
-			.defaultIfEmpty(new TaskEntity(-1L))					
-	        .doOnError(ex -> {
-	            // This block is executed if an error is thrown within the transaction
-	            System.out.println(" preReadTaskById Transaction failed: " + ex.getMessage());
-	            // The transaction will be marked for rollback automatically
-	            if (!status.isRollbackOnly()) {
-	            	status.setRollbackOnly();
-	            }
-	        }) // end doOnError	
+			.defaultIfEmpty(new TaskEntity(-1L))
+			.onErrorResume(ex -> { // let the chain continue, and do not propagate the exception
+	            System.out.println("read failed in method preReadTaskById: " + ex.getMessage());
+	            
+	            // Return a fallback Mono	            
+	            return Mono.just(new TaskEntity(-1L));
+		     })	// end onErrorResume		
 			.<TaskEntity>map(fetchedEntity -> {
 //				System.out.println("Chain did Continue");
-				if (!status.isRollbackOnly()) {
-					return fetchedEntity;
-				} else {
-					TaskEntity nullEntity = new TaskEntity(-1L);
-					return nullEntity;
-				}
+				return fetchedEntity;
 	        }) ; // end the map automatically converts the return Object to a Mono
 		}).last(); // end the execute
 	}
@@ -101,14 +94,16 @@ public class TransactionLogicService
 			// .flatMap() does not
 			
 			return taskRepository.save(task)
-	        .doOnError(ex -> {
-	            // This block is executed if an error is thrown within the transaction
-	            System.out.println("Transaction failed: " + ex.getMessage());
+			.onErrorResume(ex -> { // let the chain continue, and do not propagate the exception
+				System.out.println("save failed in method createTransactionResult: " + ex.getMessage());
 	            // The transaction will be marked for rollback automatically
 	            if (!status.isRollbackOnly()) {
 	            	status.setRollbackOnly();
 	            }
-	        }) // end doOnError	        
+	            
+	            // Return a fallback Mono	            
+	            return Mono.just(new TaskEntity(-1L));
+		     })	// end onErrorResume		
 			.<ResponseEntity<Object>>flatMap(savedEntity -> {  
 	        	// In the future write entityToJson to Kafka or RabbitMQ.
 				// Another process(maybe mulesoft or AWS Lambda or Apache Flink) can read the queue
@@ -162,14 +157,16 @@ public class TransactionLogicService
 			// .flatMap() does not
 			
 			return taskRepository.save(updatedTaskEntity)
-	        .doOnError(ex -> {
-	            // This block is executed if an error is thrown within the transaction
-	            System.out.println("update Transaction failed: " + ex.getMessage());
+			.onErrorResume(ex -> { // let the chain continue, and do not propagate the exception
+				System.out.println("save failed in method updateTransactionResult: " + ex.getMessage());
 	            // The transaction will be marked for rollback automatically
 	            if (!status.isRollbackOnly()) {
 	            	status.setRollbackOnly();
 	            }
-	        }) // end doOnError	        
+			            
+	            // Return a fallback Mono	            
+	            return Mono.just(new TaskEntity(-1L));
+		     })	// end onErrorResume		
 			.<ResponseEntity<Object>>map(savedEntity -> {
 
 	        	// In the future write entityToJson to Kafka or RabbitMQ.
@@ -228,14 +225,16 @@ public class TransactionLogicService
             return taskEntityToDelete.flatMap(fetchedTask -> taskRepository.delete(fetchedTask)
             		.then(Mono.just(fetchedTask)) // 3. Return a Mono of the original object 
             )
- 	        .doOnError(ex -> {
-	            // This block is executed if an error is thrown within the transaction
-	            System.out.println("delete Transaction failed: " + ex.getMessage());
+			.onErrorResume(ex -> { // let the chain continue, and do not propagate the exception
+				System.out.println("delete failed in method deleteTransactionResult: " + ex.getMessage());
 	            // The transaction will be marked for rollback automatically
 	            if (!status.isRollbackOnly()) {
 	            	status.setRollbackOnly();
 	            }
-	        }) // end doOnError	   
+			            
+	            // Return a fallback Mono	            
+	            return Mono.just(new TaskEntity(-1L));
+		     })	// end onErrorResume		
 			.<ResponseEntity<Object>>map(deleteReturn -> {
 				
 				RowDelete rowDeleteInfo = (RowDelete) getBean(ROW_DELETE_BEAN);
