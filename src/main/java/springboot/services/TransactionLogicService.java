@@ -60,12 +60,13 @@ public class TransactionLogicService
 			
 			return taskRepository.findById(recordId)
 			.onErrorResume(ex -> { // let the chain continue, and do not propagate the exception
-	            System.out.println("read failed in method preReadTaskById: " + ex.getMessage());
+	            System.out.println("read failed for Id: " + recordId
+	            	+ " in method preReadTaskById: " + ex.getMessage());
 	            
 	            // Return a fallback Mono	            
-	            return Mono.just(new TaskEntity(-1L));
+	            return Mono.just(new TaskEntity(READ_INTERNAL_ERROR));  // internal error
 		     })	// end onErrorResume		
-			.defaultIfEmpty(new TaskEntity(-1L))
+			.defaultIfEmpty(new TaskEntity(READ_NOT_FOUND)) // not found
 			.<TaskEntity>map(fetchedEntity -> {
 //				System.out.println("Chain did Continue");
 				return fetchedEntity;
@@ -118,7 +119,12 @@ public class TransactionLogicService
 					String queueJson = goodResponse(savedEntity, requestStringBuilderContainer, additionalFields);
 					System.out.println("Queue Json is: " + queueJson);
 					errorJson = buildDatabaseOrQueueingError("A queueing insert failed, during create.");
-					result.setResult(true);
+					try {
+						// send to Queue
+						result.setResult(true);
+					} catch(Exception ex) {
+						
+					}
 				} else { // build error Json
 					errorJson = buildDatabaseOrQueueingError("A database insert failed, during create.");
 				}
@@ -184,7 +190,12 @@ public class TransactionLogicService
 					String queueJson = goodResponse(savedEntity, requestStringBuilderContainer, additionalFields);
 					System.out.println("Queue Json is: " + queueJson);
 					errorJson = buildDatabaseOrQueueingError("A queueing insert failed, during update for Id: " + savedEntity.getId());
-					result.setResult(true);
+					try {
+						// send to Queue
+						result.setResult(true);
+					} catch(Exception ex) {
+						
+					}
 				} else { // build error Json
 					errorJson = buildDatabaseOrQueueingError("A database update failed for Id: " + savedEntity.getId());
 				}
@@ -258,7 +269,12 @@ public class TransactionLogicService
 					String queueJson = goodResponse(deleteReturn, requestStringBuilderContainer, additionalFields);
 					System.out.println("Queue Json is: " + queueJson);
 					errorJson = buildDatabaseOrQueueingError("A queueing insert failed, during delete for Id: " + deleteReturn.getId());
-					result.setResult(true);
+					try {
+						// send to Queue
+						result.setResult(true);
+					} catch(Exception ex) {
+						
+					}
 				} else { // build error Json
 					errorJson = buildDatabaseOrQueueingError("A database delete failed for Id: " + deleteReturn.getId());
 				}

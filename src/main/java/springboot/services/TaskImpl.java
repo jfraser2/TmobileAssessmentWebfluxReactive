@@ -192,7 +192,7 @@ public class TaskImpl
 					updateTaskStatus.getId(), readOnlyTransactionalOperator)
 			.<ResponseEntity<Object>>flatMap(fetchedTask -> {
 				
-				if (fetchedTask.getId() != -1L) {
+				if (fetchedTask.getId() > 0L) {
 					ZonedDateTime zonedDateTime = ZonedDateTimeEnum.INSTANCE.now();
 					fetchedTask.setTaskLastUpdateDate(zonedDateTime);
 					fetchedTask.setTaskStatus(updateTaskStatus.getNewTaskStatus());
@@ -201,8 +201,11 @@ public class TaskImpl
 							fetchedTask, transactionalOperator, requestStringBuilderContainer);	
 					return tempMono; 
 					
-				} else {
+				} else if (fetchedTask.getId().equals(READ_NOT_FOUND)){
 					return Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(NOT_FOUND_TABLE_NAME, updateTaskStatus.getId())));
+				} else {
+					String errorJson = buildDatabaseOrQueueingError("A database read failed, for Id: " + updateTaskStatus.getId());
+					return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
 				}
 			}); // end the flatMap
 		} catch (TransactionException te) {
@@ -251,14 +254,15 @@ public class TaskImpl
 					taskId, readOnlyTransactionalOperator)
 			.<ResponseEntity<Object>>flatMap(fetchedTask -> {
 				
-				if (fetchedTask.getId() != -1L) {
-					
+				if (fetchedTask.getId() > 0L) {
 					Mono<ResponseEntity<Object>> tempMono = transactionLogicService.deleteTransactionResult(request,
 							Mono.just(fetchedTask), transactionalOperator, requestStringBuilderContainer);	
 					return tempMono;
-					
-				} else {
+				} else if (fetchedTask.getId().equals(READ_NOT_FOUND)) {
 					return Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(NOT_FOUND_TABLE_NAME, taskId)));
+				} else {
+					String errorJson = buildDatabaseOrQueueingError("A database read failed, for Id: " + taskId);
+					return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
 				}
 			}); // end the flatMap
 		} catch (TransactionException te) {
