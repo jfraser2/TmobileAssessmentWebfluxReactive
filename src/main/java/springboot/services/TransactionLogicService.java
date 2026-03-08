@@ -102,7 +102,7 @@ public class TransactionLogicService
 	            }
 	            
 	            // Return a fallback Mono	            
-	            return Mono.just(new TaskEntity(-1L));
+	            return Mono.just(task); //original passed Object that failed to insert
 		     })	// end onErrorResume		
 			.<ResponseEntity<Object>>flatMap(savedEntity -> {  
 	        	// In the future write entityToJson to Kafka or RabbitMQ.
@@ -121,7 +121,7 @@ public class TransactionLogicService
 					errorJson = buildDatabaseOrQueueingError("A queueing insert failed, during create.");
 					result.setResult(true);
 				} else { // build error Json
-					errorJson = buildDatabaseOrQueueingError("A database insert failed.");
+					errorJson = buildDatabaseOrQueueingError("A database insert failed, during create.");
 				}
 				
 				System.out.println("Queueing Processed: " + result.getResult());
@@ -165,7 +165,7 @@ public class TransactionLogicService
 	            }
 			            
 	            // Return a fallback Mono	            
-	            return Mono.just(new TaskEntity(-1L));
+	            return Mono.just(updatedTaskEntity); //original passed Object that failed to save
 		     })	// end onErrorResume		
 			.<ResponseEntity<Object>>map(savedEntity -> {
 
@@ -234,7 +234,7 @@ public class TransactionLogicService
 	            }
 			            
 	            // Return a fallback Mono	            
-	            return Mono.just(new TaskEntity(-1L));
+	            return taskEntityToDelete; //original passed Object that failed to delete
 		     })	// end onErrorResume		
 			.<ResponseEntity<Object>>map(deleteReturn -> {
 				
