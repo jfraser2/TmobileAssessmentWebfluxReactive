@@ -59,14 +59,13 @@ public class TransactionLogicService
 			// .flatMap() does not
 			
 			return taskRepository.findById(recordId)
-//		    .switchIfEmpty(Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(NOT_FOUND_TABLE_NAME, recordId))))
-			.defaultIfEmpty(new TaskEntity(-1L))
 			.onErrorResume(ex -> { // let the chain continue, and do not propagate the exception
 	            System.out.println("read failed in method preReadTaskById: " + ex.getMessage());
 	            
 	            // Return a fallback Mono	            
 	            return Mono.just(new TaskEntity(-1L));
 		     })	// end onErrorResume		
+			.defaultIfEmpty(new TaskEntity(-1L))
 			.<TaskEntity>map(fetchedEntity -> {
 //				System.out.println("Chain did Continue");
 				return fetchedEntity;
