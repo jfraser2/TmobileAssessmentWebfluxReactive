@@ -223,6 +223,7 @@ public class TransactionLogicService
 			// .flatMap() does not
 			
             return taskEntityToDelete.flatMap(fetchedTask -> taskRepository.delete(fetchedTask)
+//            		.then(Mono.error(new RuntimeException("Test Error")))
             		.then(Mono.just(fetchedTask)) // 3. Return a Mono of the original object 
             )
 			.onErrorResume(ex -> { // let the chain continue, and do not propagate the exception
