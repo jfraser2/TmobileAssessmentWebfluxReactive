@@ -78,7 +78,7 @@ public class TaskImpl
 			    } else {
 				  return ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(displayEmptyList(ENTITY_CLASS_NAME)); // Returns 200 and an empty json List if the Mono is empty 
 			    }
-			})
+			})  // end the map, automatically converts the return Object to a Mono
 			.as(readOnlyTransactionalOperator::transactional) // Wrap the operations in a transaction
 			.onErrorResume(ex -> {
 				// Handle both TransactionException and other RuntimeExceptions here
@@ -115,7 +115,7 @@ public class TaskImpl
 				} else {
 				  return ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(displayEmptyList(ENTITY_CLASS_NAME)); // Returns 200 and an empty json List if the Flux is empty 
 				}
-			})
+			})  // end the map, automatically converts the return Object to a Mono
 			.as(readOnlyTransactionalOperator::transactional) // Wrap the operations in a transaction
 			.onErrorResume(ex -> {
 				// Handle both TransactionException and other RuntimeExceptions here
