@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.reactive.TransactionalOperator;
 
 import reactor.core.publisher.Flux;
@@ -81,7 +80,7 @@ public class TaskImpl
 			})  // end the map, automatically converts the return Object to a Mono
 			.as(readOnlyTransactionalOperator::transactional) // Wrap the operations in a transaction
 			.onErrorResume(ex -> {
-				// Handle both TransactionException and other RuntimeExceptions here
+				// Handle both TransactionException and RuntimeException here
 				String errorJson = buildDatabaseOrQueueingError("A database read Transaction failed: " + ex.getMessage()
 					+ " in method findByTaskStatus(taskStatus) for value: " + taskStatus);
 				return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
@@ -118,7 +117,7 @@ public class TaskImpl
 			})  // end the map, automatically converts the return Object to a Mono
 			.as(readOnlyTransactionalOperator::transactional) // Wrap the operations in a transaction
 			.onErrorResume(ex -> {
-				// Handle both TransactionException and other RuntimeExceptions here
+				// Handle both TransactionException and RuntimeException here
 				String errorJson = buildDatabaseOrQueueingError("A database read Transaction failed: " + ex.getMessage()
 						+ " in method findAll()");
 				return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
@@ -149,13 +148,7 @@ public class TaskImpl
 		
 		
 		return transactionLogicService.createTransactionResult(request,
-				tempEntity, transactionalOperator, requestStringBuilderContainer)
-			.onErrorResume(ex -> {
-				// Handle both TransactionException and other RuntimeExceptions here
-				String errorJson = buildDatabaseOrQueueingError("A database insert Transaction failed: " + ex.getMessage()
-					+ " in method buildAndPersistTaskEntity");
-				return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
-			});	// end onErrorResume
+				tempEntity, transactionalOperator, requestStringBuilderContainer);
 				
 /*		
 		return  tempMono.flatMap(task -> taskRepository.save(task))
@@ -187,25 +180,14 @@ public class TaskImpl
 				
 				if (fetchedTask.getId() > 0L) {
 					return Mono.just(ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(goodResponse(fetchedTask , requestStringBuilderContainer, null)));
+					
 				} else if (fetchedTask.getId().equals(READ_NOT_FOUND)){
 					return Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(NOT_FOUND_TABLE_NAME, id)));
 				} else {
 					String errorJson = buildDatabaseOrQueueingError("A database read failed, for Id: " + id);
 					return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
 				}
-			}) // end the flatMap
-	        .onErrorResume(TransactionException.class, te -> {
-	            // This block handles only TransactionException
-				String errorJson = buildDatabaseOrQueueingError("A database read Transaction failed: " + te.getMessage()
-					+ " in method findByTaskId(id) for value: " + id);
-				return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
-	        }) 	// end onErrorResume
-	        .onErrorResume(RuntimeException.class, re -> {
-	            // This block handles only Runtime exceptions
-				String errorJson = buildDatabaseOrQueueingError("A database read Transaction failed: " + re.getMessage()
-					+ " in method  findByTaskId(id) for value: " + id);
-				return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
-	        }); 	// end onErrorResume
+			}); // end the flatMap
 			
 /*		
 		return taskRepository.findById(id)
@@ -235,9 +217,8 @@ public class TaskImpl
 					fetchedTask.setTaskLastUpdateDate(zonedDateTime);
 					fetchedTask.setTaskStatus(updateTaskStatus.getNewTaskStatus());
 					
-					Mono<ResponseEntity<Object>> tempMono = transactionLogicService.updateTransactionResult(request,
+					return transactionLogicService.updateTransactionResult(request,
 							fetchedTask, transactionalOperator, requestStringBuilderContainer);	
-					return tempMono; 
 					
 				} else if (fetchedTask.getId().equals(READ_NOT_FOUND)){
 					return Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(NOT_FOUND_TABLE_NAME, updateTaskStatus.getId())));
@@ -245,19 +226,7 @@ public class TaskImpl
 					String errorJson = buildDatabaseOrQueueingError("A database update failed, for Id: " + updateTaskStatus.getId());
 					return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
 				}
-			}) // end the flatMap
-	        .onErrorResume(TransactionException.class, te -> {
-	            // This block handles only TransactionException
-				String errorJson = buildDatabaseOrQueueingError("A database update Transaction failed: " + te.getMessage()
-					+ " in method updateTaskStatus for value: " + updateTaskStatus.getId());
-				return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
-	        }) 	// end onErrorResume
-	        .onErrorResume(RuntimeException.class, re -> {
-	            // This block handles only Runtime exceptions
-				String errorJson = buildDatabaseOrQueueingError("A database update Transaction failed: " + re.getMessage()
-					+ " in method updateTaskStatus for value: " + updateTaskStatus.getId());
-				return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
-	        }); 	// end onErrorResume
+			}); // end the flatMap
 			
 
 /*
@@ -295,29 +264,16 @@ public class TaskImpl
 			.<ResponseEntity<Object>>flatMap(fetchedTask -> {
 				
 				if (fetchedTask.getId() > 0L) {
-					Mono<ResponseEntity<Object>> tempMono = transactionLogicService.deleteTransactionResult(request,
-							Mono.just(fetchedTask), transactionalOperator, requestStringBuilderContainer);
+					return transactionLogicService.deleteTransactionResult(request,
+							Mono.just(fetchedTask), taskId, transactionalOperator, requestStringBuilderContainer);
 					
-					return tempMono;
 				} else if (fetchedTask.getId().equals(READ_NOT_FOUND)) {
 					return Mono.error(new DatabaseRowNotFoundException(buildNoDatabaseRowMessage(NOT_FOUND_TABLE_NAME, taskId)));
 				} else {
 					String errorJson = buildDatabaseOrQueueingError("A database delete failed, for Id: " + taskId);
 					return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
 				}
-			}) // end the flatMap
-	        .onErrorResume(TransactionException.class, te -> {
-	            // This block handles only TransactionException
-				String errorJson = buildDatabaseOrQueueingError("A database delete Transaction failed: " + te.getMessage()
-					+ " in method deleteTask for value: " + taskId);
-				return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
-	        }) 	// end onErrorResume
-	        .onErrorResume(RuntimeException.class, re -> {
-	            // This block handles only Runtime exceptions
-				String errorJson = buildDatabaseOrQueueingError("A database delete Transaction failed: " + re.getMessage()
-					+ " in method deleteTask for value: " + taskId);
-				return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson));
-	        }); 	// end onErrorResume
+			}); // end the flatMap
     	
     	
     	

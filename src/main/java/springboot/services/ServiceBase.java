@@ -38,6 +38,7 @@ public abstract class ServiceBase
 	protected static final String GODD_RESPONSE_SUFFIX = "}";
 	protected static final String JSON_FIELD_SEPARATOR = ",";
 	
+	protected static final Long READ_TRANSACTION_ERROR = -3L;
 	protected static final Long READ_INTERNAL_ERROR = -2L;
 	protected static final Long READ_NOT_FOUND = -1L;
 	
