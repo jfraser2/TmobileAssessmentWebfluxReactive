@@ -162,54 +162,54 @@ public class TransactionLogicService
 			// .flatMap() does not
 			
 			return taskRepository.save(updatedTaskEntity)
-			.onErrorResume(ex -> { // let the chain continue, and do not propagate the exception
-				System.out.println("save failed in method updateTransactionResult: " + ex.getMessage());
-	            // The transaction will be marked for rollback automatically
-	            if (!status.isRollbackOnly()) {
-	            	status.setRollbackOnly();
-	            }
-			            
-	            // Return a fallback Mono	            
-	            return Mono.just(updatedTaskEntity); //original passed Object that failed to save
-		     })	// end onErrorResume		
-			.<ResponseEntity<Object>>map(savedEntity -> {
-
-	        	// In the future write entityToJson to Kafka or RabbitMQ.
-				// Another process(maybe mulesoft or AWS Lambda or Apache Flink) can read the queue
-				//  and store the json, in an Iceberg table living in AWS S3.
-				// The S3 bucket would store the json, using the OLAP data lake format parquet.
-				// Then snowflake can use it.
-				QueueResult result = new QueueResult(savedEntity, false);
-	            	
-				String errorJson = null;
-				if (!status.isRollbackOnly()) { // check if the database update worked
-					NonModelAdditionalFields additionalFields = new NonModelAdditionalFields(
-						"T-Mobile", OperationEnum.UPDATE.getValue());
-					additionalFields.addUpdateInfo("String", "Tasks", "task_status", "taskStatus");
-					additionalFields.addUpdateInfo("ZonedDateTime", "Tasks", "task_last_update_date", " taskLastUpdateDate");
-					String queueJson = goodResponse(savedEntity, requestStringBuilderContainer, additionalFields);
-					System.out.println("Queue Json is: " + queueJson);
-					errorJson = buildDatabaseOrQueueingError("A queueing insert failed, during update for Id: " + savedEntity.getId());
-					try {
-						// send to Queue
-						result.setResult(true);
-					} catch(Exception ex) {
-						
+				.onErrorResume(ex -> { // let the chain continue, and do not propagate the exception
+					System.out.println("save failed in method updateTransactionResult: " + ex.getMessage());
+		            // The transaction will be marked for rollback automatically
+		            if (!status.isRollbackOnly()) {
+		            	status.setRollbackOnly();
+		            }
+				            
+		            // Return a fallback Mono	            
+		            return Mono.just(updatedTaskEntity); //original passed Object that failed to save
+			     })	// end onErrorResume		
+				.<ResponseEntity<Object>>map(savedEntity -> {
+	
+		        	// In the future write entityToJson to Kafka or RabbitMQ.
+					// Another process(maybe mulesoft or AWS Lambda or Apache Flink) can read the queue
+					//  and store the json, in an Iceberg table living in AWS S3.
+					// The S3 bucket would store the json, using the OLAP data lake format parquet.
+					// Then snowflake can use it.
+					QueueResult result = new QueueResult(savedEntity, false);
+		            	
+					String errorJson = null;
+					if (!status.isRollbackOnly()) { // check if the database update worked
+						NonModelAdditionalFields additionalFields = new NonModelAdditionalFields(
+							"T-Mobile", OperationEnum.UPDATE.getValue());
+						additionalFields.addUpdateInfo("String", "Tasks", "task_status", "taskStatus");
+						additionalFields.addUpdateInfo("ZonedDateTime", "Tasks", "task_last_update_date", " taskLastUpdateDate");
+						String queueJson = goodResponse(savedEntity, requestStringBuilderContainer, additionalFields);
+						System.out.println("Queue Json is: " + queueJson);
+						errorJson = buildDatabaseOrQueueingError("A queueing insert failed, during update for Id: " + savedEntity.getId());
+						try {
+							// send to Queue
+							result.setResult(true);
+						} catch(Exception ex) {
+							
+						}
+					} else { // build error Json
+						errorJson = buildDatabaseOrQueueingError("A database update failed for Id: " + savedEntity.getId());
 					}
-				} else { // build error Json
-					errorJson = buildDatabaseOrQueueingError("A database update failed for Id: " + savedEntity.getId());
-				}
-				
-				System.out.println("Queueing Processed: " + result.getResult());
-				
-				if (result.getResult()) {
-					String entityToJson = goodResponse(savedEntity, requestStringBuilderContainer, null);
-				    return ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(entityToJson);
-				} else {
-					status.setRollbackOnly(); // Mark for rollback
-				    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson);
-				}
-			}); // end the map, automatically converts the return Object to a Mono
+					
+					System.out.println("Queueing Processed: " + result.getResult());
+					
+					if (result.getResult()) {
+						String entityToJson = goodResponse(savedEntity, requestStringBuilderContainer, null);
+					    return ResponseEntity.status(HttpStatus.OK).headers(createResponseHeader(request)).body(entityToJson);
+					} else {
+						status.setRollbackOnly(); // Mark for rollback
+					    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(createResponseHeader(request)).body(errorJson);
+					}
+				}); // end the map, automatically converts the return Object to a Mono
 		}).last(); // end the execute
 	}
 	
